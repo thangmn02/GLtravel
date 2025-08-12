@@ -1,0 +1,85 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Sidebar from '../components/Sidebar.astro';
+import Footer from '../components/Footer.astro';
+import site from '../data/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+const {
+  title = site.titleEn,
+  description = site.descriptionEn,
+} = Astro.props;
+---
+<html lang="en" class="lang-en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" />
+    <title>{title}</title>
+    <script is:inline>
+      (function() {
+        const KEY = 'preferred-lang';
+        const html = document.documentElement;
+        const saved = localStorage.getItem(KEY);
+        function setLang(lang) {
+          html.classList.remove('lang-en','lang-vi');
+          html.classList.add(lang === 'vi' ? 'lang-vi' : 'lang-en');
+          html.setAttribute('lang', lang === 'vi' ? 'vi' : 'en');
+          localStorage.setItem(KEY, lang);
+        }
+        // infer from saved or IP. If no saved preference, try IP geolocation; fallback to locale/timezone
+        let initial = saved;
+        function decideByEnv() {
+          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+          const locale = navigator.language || '';
+          if (locale.toLowerCase().startsWith('vi') || tz.includes('Ho_Chi_Minh') || tz.includes('Bangkok')) {
+            return 'vi';
+          }
+          return 'en';
+        }
+        if (!initial) {
+          try {
+            fetch('https://ipapi.co/country/', { cache: 'no-store' })
+              .then(r => r.ok ? r.text() : Promise.reject())
+              .then(code => {
+                const lang = (code || '').trim().toUpperCase() === 'VN' ? 'vi' : 'en';
+                setLang(lang);
+              })
+              .catch(() => setLang(decideByEnv()));
+          } catch (e) {
+            setLang(decideByEnv());
+          }
+        } else {
+          setLang(initial);
+        }
+        window.__setLang = setLang;
+        document.addEventListener('DOMContentLoaded', () => {
+          const btn = document.getElementById('lang-toggle');
+          if (btn) {
+            btn.addEventListener('click', () => {
+              const next = html.classList.contains('lang-vi') ? 'en' : 'vi';
+              setLang(next);
+            });
+          }
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <Header />
+    <main class="container">
+      <div class="docs-grid">
+        <Sidebar />
+        <article class="content">
+          <slot />
+        </article>
+      </div>
+    </main>
+    <Footer />
+  </body>
+</html>

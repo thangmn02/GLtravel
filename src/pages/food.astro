@@ -1,0 +1,32 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import site from '../data/site';
+---
+<DocsLayout title={`Food — ${site.titleEn}`}>
+  <h1>
+    <span data-lang="en">Food</span>
+    <span data-lang="vi">Ẩm thực</span>
+  </h1>
+  <p>
+    <span data-lang="en">Add signature dishes, regional specialties, and where to try them.</span>
+    <span data-lang="vi">Thêm các món đặc trưng, đặc sản vùng miền và địa điểm thưởng thức.</span>
+  </p>
+  <h2>
+    <span data-lang="en">Must-Try Dishes</span>
+    <span data-lang="vi">Món nên thử</span>
+  </h2>
+  <ul>
+    <li>
+      <span data-lang="en">Gia Lai dry noodle (Pho Kho) — unique two-bowl style</span>
+      <span data-lang="vi">Phở khô Gia Lai — phong cách hai tô độc đáo</span>
+    </li>
+    <li>
+      <span data-lang="en">Grilled chicken with bamboo-tube rice</span>
+      <span data-lang="vi">Gà nướng cơm lam</span>
+    </li>
+    <li>
+      <span data-lang="en">Coffee — robust Central Highlands flavor</span>
+      <span data-lang="vi">Cà phê — đậm đà hương vị Tây Nguyên</span>
+    </li>
+  </ul>
+</DocsLayout>

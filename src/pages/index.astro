@@ -1,0 +1,58 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import site from '../data/site';
+---
+<DocsLayout title={`${site.titleEn} — Overview`}>
+  <section class="hero">
+    <h1>
+      <span data-lang="en">Welcome to {site.titleEn}</span>
+      <span data-lang="vi">Chào mừng đến với {site.titleVi}</span>
+    </h1>
+    <p>
+      <span data-lang="en">{site.descriptionEn}</span>
+      <span data-lang="vi">{site.descriptionVi}</span>
+    </p>
+    <div class="cards">
+      <a class="card wood" href="/history">
+        <h3>
+          <span data-lang="en">History</span>
+          <span data-lang="vi">Lịch sử</span>
+        </h3>
+        <p>
+          <span data-lang="en">From early settlements to modern times.</span>
+          <span data-lang="vi">Từ buổi hình thành đến hiện đại.</span>
+        </p>
+      </a>
+      <a class="card" href="/culture">
+        <h3>
+          <span data-lang="en">Culture</span>
+          <span data-lang="vi">Văn hoá</span>
+        </h3>
+        <p>
+          <span data-lang="en">Traditions, festivals, arts, and heritage.</span>
+          <span data-lang="vi">Truyền thống, lễ hội, nghệ thuật và di sản.</span>
+        </p>
+      </a>
+      <a class="card" href="/attractions">
+        <h3>
+          <span data-lang="en">Attractions</span>
+          <span data-lang="vi">Danh thắng</span>
+        </h3>
+        <p>
+          <span data-lang="en">Must-see places across the province.</span>
+          <span data-lang="vi">Những điểm đến không thể bỏ qua.</span>
+        </p>
+      </a>
+      <a class="card" href="/food">
+        <h3>
+          <span data-lang="en">Food</span>
+          <span data-lang="vi">Ẩm thực</span>
+        </h3>
+        <p>
+          <span data-lang="en">Signature dishes and local flavors.</span>
+          <span data-lang="vi">Món ăn tiêu biểu và hương vị bản địa.</span>
+        </p>
+      </a>
+    </div>
+  </section>
+</DocsLayout>

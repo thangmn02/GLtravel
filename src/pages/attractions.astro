@@ -1,0 +1,32 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import site from '../data/site';
+---
+<DocsLayout title={`Attractions — ${site.titleEn}`}>
+  <h1>
+    <span data-lang="en">Attractions</span>
+    <span data-lang="vi">Danh thắng</span>
+  </h1>
+  <p>
+    <span data-lang="en">List natural wonders, landmarks, parks, museums, and more.</span>
+    <span data-lang="vi">Liệt kê kỳ quan thiên nhiên, danh lam thắng cảnh, công viên, bảo tàng, v.v.</span>
+  </p>
+  <h2>
+    <span data-lang="en">Top Picks</span>
+    <span data-lang="vi">Gợi ý hàng đầu</span>
+  </h2>
+  <ul>
+    <li>
+      <span data-lang="en">Bien Ho (T’Nung Lake) — volcanic lake with stunning vistas</span>
+      <span data-lang="vi">Biển Hồ — hồ núi lửa với cảnh quan tuyệt đẹp</span>
+    </li>
+    <li>
+      <span data-lang="en">Chu Dang Ya — dormant volcano with seasonal flowers</span>
+      <span data-lang="vi">Chư Đăng Ya — núi lửa ngủ với hoa theo mùa</span>
+    </li>
+    <li>
+      <span data-lang="en">Kon Ka Kinh National Park — biodiversity and trekking</span>
+      <span data-lang="vi">Vườn quốc gia Kon Ka Kinh — đa dạng sinh học và trekking</span>
+    </li>
+  </ul>
+</DocsLayout>

@@ -1,0 +1,17 @@
+---
+import site from '../data/site';
+const { nav } = site;
+const { pathname } = Astro.url;
+---
+<aside class="sidebar">
+  <h3>
+    <span data-lang="en">Overview</span>
+    <span data-lang="vi">Tổng quan</span>
+  </h3>
+  {nav.map((item) => (
+    <a href={item.href} class={pathname === item.href ? 'active' : undefined}>
+      <span data-lang="en">{item.titleEn}</span>
+      <span data-lang="vi">{item.titleVi}</span>
+    </a>
+  ))}
+</aside>

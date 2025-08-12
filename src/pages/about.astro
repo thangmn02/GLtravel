@@ -1,0 +1,32 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import site from '../data/site';
+---
+<DocsLayout title={`About — ${site.titleEn}`}>
+  <h1>
+    <span data-lang="en">About This Site</span>
+    <span data-lang="vi">Giới thiệu</span>
+  </h1>
+  <p>
+    <span data-lang="en">This project is built with Astro and deployed on Netlify. Customize content to showcase Gia Lai.</span>
+    <span data-lang="vi">Dự án được xây dựng bằng Astro và triển khai trên Netlify. Tuỳ biến nội dung để giới thiệu Gia Lai.</span>
+  </p>
+  <h2>
+    <span data-lang="en">How to Edit</span>
+    <span data-lang="vi">Cách chỉnh sửa</span>
+  </h2>
+  <ul>
+    <li>
+      <span data-lang="en">Update site title and navigation in <code>src/data/site.ts</code></span>
+      <span data-lang="vi">Cập nhật tiêu đề và điều hướng tại <code>src/data/site.ts</code></span>
+    </li>
+    <li>
+      <span data-lang="en">Edit page content in files under <code>src/pages</code></span>
+      <span data-lang="vi">Chỉnh sửa nội dung trang trong thư mục <code>src/pages</code></span>
+    </li>
+    <li>
+      <span data-lang="en">Adjust layout and styles in <code>src/layouts/DocsLayout.astro</code> and <code>src/styles/global.css</code></span>
+      <span data-lang="vi">Tinh chỉnh bố cục và kiểu dáng trong <code>src/layouts/DocsLayout.astro</code> và <code>src/styles/global.css</code></span>
+    </li>
+  </ul>
+</DocsLayout>

@@ -1,0 +1,24 @@
+---
+import site from '../data/site';
+const { nav, titleEn, titleVi } = site;
+const { pathname } = Astro.url;
+---
+<header class="header container">
+  <a href="/" class="brand" aria-label={`${titleEn} / ${titleVi}`}>
+    <span class="dot" />
+    <span data-lang="en">{titleEn}</span>
+    <span data-lang="vi">{titleVi}</span>
+  </a>
+  <nav class="nav" aria-label="Primary">
+    {nav.map((item) => (
+      <a href={item.href} class={pathname === item.href ? 'active' : undefined}>
+        <span data-lang="en">{item.titleEn}</span>
+        <span data-lang="vi">{item.titleVi}</span>
+      </a>
+    ))}
+    <button id="lang-toggle" class="lang-toggle" type="button" aria-live="polite">
+      <span data-lang="en">VI</span>
+      <span data-lang="vi">EN</span>
+    </button>
+  </nav>
+</header>
