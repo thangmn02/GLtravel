@@ -1,0 +1,1186 @@
+---
+import { getCollection } from 'astro:content';
+
+// Fetch locations from content collection
+let locations = [] as Array<{ 
+  data: { 
+    title: string; 
+    description: string; 
+    coordinates: [number, number] 
+  } 
+}>;
+
+try {
+  // @ts-ignore - getCollection might not be available in all environments
+  locations = await getCollection('locations');
+  console.log(`[InteractiveMap] Loaded ${locations.length} locations from content collection`);
+} catch (error) {
+  console.warn('[InteractiveMap] Could not load locations:', error);
+  locations = [];
+}
+
+// Read Mapbox token from environment (server-side)
+const mapboxAccessToken = import.meta.env.MAPBOX_ACCESS_TOKEN || '';
+
+if (!mapboxAccessToken) {
+  console.error('[InteractiveMap] MAPBOX_ACCESS_TOKEN is not set in environment variables');
+}
+---
+<!-- Mapbox GL CSS -->
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+
+<!-- Mapbox GL Directions CSS (for route styling) -->
+<link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css" rel="stylesheet" />
+
+<!-- Full-screen container with floating UI over the map -->
+<div class="fullscreen">
+  <!-- Back to Home link -->
+  <a class="home" href="/" aria-label="Back to Home">← Home</a>
+  
+  <!-- Logo placeholder -->
+  <div class="brand">Your Logo</div>
+  
+  <!-- Side panel with locations list -->
+  <aside class="panel list" aria-label="Locations">
+    <h2>Địa điểm</h2>
+    
+    {locations.length === 0 && (
+      <div class="empty">
+        <p>Chưa có địa điểm.</p>
+        <p>Thêm tệp vào <code>src/content/locations/</code>.</p>
+      </div>
+    )}
+    
+    {locations.map((entry, index) => (
+      <div class="item" data-index={index} data-lng={entry.data.coordinates[0]} data-lat={entry.data.coordinates[1]}>
+        <h3>{entry.data.title}</h3>
+        <p>{entry.data.description}</p>
+        <div class="actions">
+          <button class="focus" data-index={index}>Xem</button>
+          <button class="directions" data-index={index}>Chỉ đường</button>
+        </div>
+      </div>
+    ))}
+  </aside>
+  
+  <!-- Map container -->
+  <div id="gl-map" class="map" aria-label="Interactive map"></div>
+  
+  <!-- Loading indicator -->
+  <div id="map-loading" class="loading">
+    <div class="spinner"></div>
+    <p>Đang tải bản đồ...</p>
+  </div>
+  
+  <!-- Modal overlay and dialog -->
+  <div id="modal-overlay" class="modal-overlay" aria-hidden="true">
+    <div class="modal-dialog" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+      <button class="modal-close" aria-label="Đóng" title="Đóng">&times;</button>
+      <div class="modal-content">
+        <h3 id="modal-title" class="modal-title">Lỗi truy cập vị trí</h3>
+        <p id="modal-message" class="modal-message">
+          Không thể lấy vị trí của bạn. Vui lòng cho phép truy cập vị trí để sử dụng tính năng chỉ đường.
+        </p>
+        <div class="modal-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#9a382d"/>
+            <path d="M3 3L21 21" stroke="#d32f2f" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mapbox GL JS -->
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
+<script define:vars={{ mapboxAccessToken, locations }}>
+  // Global variables
+  let map = null;
+  const markers = [];
+  const popups = [];
+  let currentRoute = null;
+  
+  // Constants
+  const ROUTE_SOURCE_ID = 'directions-route';
+  const ROUTE_LAYER_ID = 'directions-route-layer';
+  const DEFAULT_CENTER = [108.0005, 13.9833]; // Gia Lai coordinates
+  const DEFAULT_ZOOM = 15; // Increased from 10 to 15 for 3D view
+  
+  // Logging helper
+  function log(message, ...args) {
+    console.log(`[InteractiveMap] ${message}`, ...args);
+  }
+  
+  function logError(message, error) {
+    console.error(`[InteractiveMap] ${message}`, error);
+  }
+
+  // Wait for DOM and Mapbox GL to be ready
+  function waitForMapboxGL() {
+    return new Promise((resolve) => {
+      if (typeof mapboxgl !== 'undefined') {
+        log('Mapbox GL JS is already loaded');
+        resolve();
+      } else {
+        log('Waiting for Mapbox GL JS to load...');
+        const checkInterval = setInterval(() => {
+          if (typeof mapboxgl !== 'undefined') {
+            clearInterval(checkInterval);
+            log('Mapbox GL JS has loaded');
+            resolve();
+          }
+        }, 100);
+      }
+    });
+  }
+
+  // Initialize everything when DOM is ready
+  async function initialize() {
+    try {
+      log('Starting initialization...');
+      
+      // Check for access token
+      if (!mapboxAccessToken) {
+        throw new Error('MAPBOX_ACCESS_TOKEN is not set. Cannot initialize map.');
+      }
+      
+      // Wait for Mapbox GL to be available
+      await waitForMapboxGL();
+      
+      // Set access token
+      mapboxgl.accessToken = mapboxAccessToken;
+      log('Access token set');
+      
+      // Initialize the map
+      await initializeMap();
+      
+      // Hide loading indicator
+      const loadingEl = document.getElementById('map-loading');
+      if (loadingEl) {
+        loadingEl.style.display = 'none';
+      }
+      
+    } catch (error) {
+      logError('Failed to initialize:', error);
+      showError('Không thể tải bản đồ. Vui lòng kiểm tra kết nối.');
+    }
+  }
+
+  // Initialize the map
+  async function initializeMap() {
+    log('Creating map instance...');
+    
+    const mapContainer = document.getElementById('gl-map');
+    if (!mapContainer) {
+      throw new Error('Map container element not found');
+    }
+    
+    // Determine initial center
+    const initialCenter = locations.length > 0 
+      ? locations[0].data.coordinates 
+      : DEFAULT_CENTER;
+    
+    try {
+      // Create map instance with 3D perspective
+      map = new mapboxgl.Map({
+        container: 'gl-map',
+        style: 'mapbox://styles/mapbox/streets-v12', // Using default style for reliability
+        center: initialCenter,
+        zoom: DEFAULT_ZOOM,
+        pitch: 60, // Tilt angle in degrees (0-85) for 3D effect
+        bearing: -20, // Rotation angle in degrees (compass direction)
+        attributionControl: true,
+        failIfMajorPerformanceCaveat: false,
+        antialias: true // Smooth edges in 3D view
+      });
+      
+      log('Map instance created');
+      
+      // Add navigation controls
+      map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      
+      // Add geolocate control
+      const geolocateControl = new mapboxgl.GeolocateControl({
+        positionOptions: {
+          enableHighAccuracy: true
+        },
+        trackUserLocation: true,
+        showUserHeading: true
+      });
+      map.addControl(geolocateControl, 'top-right');
+      
+      // Wait for map to load
+      map.on('load', () => {
+        log('Map loaded successfully');
+        onMapReady();
+      });
+      
+      // Handle map errors
+      map.on('error', (e) => {
+        logError('Map error:', e);
+      });
+      
+    } catch (error) {
+      logError('Failed to create map:', error);
+      throw error;
+    }
+  }
+
+  // Called when map is fully loaded
+  function onMapReady() {
+    log('Map is ready, adding features...');
+    
+    // Add 3D terrain data source
+    add3DTerrainAndBuildings();
+    
+    // Add markers and popups
+    addMarkersAndPopups();
+    
+    // Setup event listeners
+    setupEventListeners();
+    
+    // Fit bounds if we have locations
+    if (locations.length > 0) {
+      fitMapToLocations();
+    }
+  }
+
+  // Add 3D terrain and buildings to the map
+  function add3DTerrainAndBuildings() {
+    try {
+      log('Adding 3D terrain and buildings...');
+      
+      // Add Mapbox DEM (Digital Elevation Model) source for 3D terrain
+      map.addSource('mapbox-dem', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        tileSize: 512,
+        maxzoom: 14
+      });
+      
+      // Set the terrain property to enable 3D terrain
+      map.setTerrain({ 
+        source: 'mapbox-dem',
+        exaggeration: 1.5 // Slight exaggeration for better visual effect
+      });
+      
+      // Add fog for better depth perception
+      map.setFog({
+        color: 'rgb(186, 210, 235)', // Light blue fog
+        'high-color': 'rgb(36, 92, 223)', // Upper atmosphere color
+        'horizon-blend': 0.02, // Blend between fog and sky
+        'space-color': 'rgb(11, 11, 25)', // Color of the space
+        'star-intensity': 0.6 // Intensity of stars (when pitched high enough)
+      });
+      
+      // Add 3D buildings layer
+      map.addLayer({
+        id: '3d-buildings',
+        source: 'composite',
+        'source-layer': 'building',
+        filter: ['==', 'extrude', 'true'],
+        type: 'fill-extrusion',
+        minzoom: 15,
+        paint: {
+          'fill-extrusion-color': '#aaa',
+          
+          // Use an interpolate expression to get building height
+          'fill-extrusion-height': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            15,
+            0,
+            15.05,
+            ['get', 'height']
+          ],
+          
+          // Use an interpolate expression to get building base height
+          'fill-extrusion-base': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            15,
+            0,
+            15.05,
+            ['get', 'min_height']
+          ],
+          
+          'fill-extrusion-opacity': 0.6
+        }
+      });
+      
+      log('3D terrain and buildings added successfully');
+      
+      // Add sky layer for better 3D effect
+      map.addLayer({
+        id: 'sky',
+        type: 'sky',
+        paint: {
+          'sky-type': 'atmosphere',
+          'sky-atmosphere-sun': [0.0, 90.0],
+          'sky-atmosphere-sun-intensity': 15
+        }
+      });
+      
+    } catch (error) {
+      logError('Failed to add 3D features:', error);
+      // Continue without 3D features if there's an error
+    }
+  }
+
+  // Add markers and popups for all locations
+  function addMarkersAndPopups() {
+    log(`Adding ${locations.length} markers...`);
+    
+    locations.forEach((location, index) => {
+      try {
+        const { title, description, coordinates } = location.data;
+        const [lng, lat] = coordinates;
+        
+        // Create popup
+        const popup = new mapboxgl.Popup({
+          offset: 25,
+          closeButton: true,
+          closeOnClick: false,
+          className: 'location-popup'
+        })
+        .setHTML(`
+          <div class="popup-content">
+            <h3>${title}</h3>
+            <p>${description}</p>
+          </div>
+        `);
+        
+        // Create custom marker element
+        const markerEl = document.createElement('div');
+        markerEl.className = 'custom-marker';
+        markerEl.setAttribute('data-index', index.toString());
+        
+        // Create marker
+        const marker = new mapboxgl.Marker({
+          element: markerEl,
+          anchor: 'bottom'
+        })
+        .setLngLat([lng, lat])
+        .setPopup(popup)
+        .addTo(map);
+        
+        // Store references
+        markers[index] = marker;
+        popups[index] = popup;
+        
+        // Add click handler to marker
+        markerEl.addEventListener('click', () => {
+          log(`Marker ${index} clicked`);
+          flyToLocation(index);
+        });
+        
+      } catch (error) {
+        logError(`Failed to add marker ${index}:`, error);
+      }
+    });
+    
+    log('All markers added');
+  }
+
+  // Setup event listeners for UI interactions
+  function setupEventListeners() {
+    log('Setting up event listeners...');
+    
+    const panel = document.querySelector('.panel');
+    if (!panel) {
+      logError('Panel element not found');
+      return;
+    }
+    
+    // Use event delegation for panel clicks
+    panel.addEventListener('click', handlePanelClick);
+  }
+
+  // Handle clicks in the side panel
+  function handlePanelClick(event) {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    
+    // Find the data-index attribute
+    const indexStr = target.getAttribute('data-index') || 
+                     target.closest('[data-index]')?.getAttribute('data-index');
+    
+    if (indexStr === null) return;
+    
+    const index = parseInt(indexStr, 10);
+    if (isNaN(index)) return;
+    
+    // Handle different button clicks
+    if (target.classList.contains('focus')) {
+      log(`Focus button clicked for location ${index}`);
+      flyToLocation(index);
+    } else if (target.classList.contains('directions')) {
+      log(`Directions button clicked for location ${index}`);
+      getDirections(index);
+    } else if (target.closest('.item')) {
+      log(`Item clicked for location ${index}`);
+      flyToLocation(index);
+    }
+  }
+
+  // Fly to a specific location
+  function flyToLocation(index) {
+    if (!map || !locations[index]) return;
+    
+    const { coordinates } = locations[index].data;
+    const [lng, lat] = coordinates;
+    
+    log(`Flying to location ${index}: [${lng}, ${lat}]`);
+    
+    map.flyTo({
+      center: [lng, lat],
+      zoom: 14,
+      duration: 1500,
+      essential: true
+    });
+    
+    // Open the popup
+    if (popups[index]) {
+      // Close all other popups first
+      popups.forEach((popup, i) => {
+        if (i !== index && popup.isOpen()) {
+          popup.remove();
+        }
+      });
+      
+      // Open this popup
+      popups[index].addTo(map);
+    }
+  }
+
+  // Fit map bounds to show all locations
+  function fitMapToLocations() {
+    if (!map || locations.length === 0) return;
+    
+    const bounds = new mapboxgl.LngLatBounds();
+    
+    locations.forEach(location => {
+      bounds.extend(location.data.coordinates);
+    });
+    
+    map.fitBounds(bounds, {
+      padding: { top: 50, bottom: 50, left: 400, right: 50 },
+      duration: 1000
+    });
+  }
+
+  // Get user's current position
+  function getUserLocation() {
+    return new Promise((resolve, reject) => {
+      if (!('geolocation' in navigator)) {
+        reject(new Error('Geolocation is not supported by your browser'));
+        return;
+      }
+      
+      log('Requesting user location...');
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { longitude, latitude } = position.coords;
+          log(`User location obtained: [${longitude}, ${latitude}]`);
+          resolve([longitude, latitude]);
+        },
+        (error) => {
+          logError('Failed to get user location:', error);
+          reject(error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    });
+  }
+
+  // Get directions to a location
+  async function getDirections(index) {
+    if (!map || !locations[index]) return;
+    
+    try {
+      log(`Getting directions to location ${index}...`);
+      
+      // Get user's location
+      const userCoords = await getUserLocation();
+      const destCoords = locations[index].data.coordinates;
+      
+      // Fetch directions from Mapbox API
+      const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${userCoords[0]},${userCoords[1]};${destCoords[0]},${destCoords[1]}`;
+      const params = new URLSearchParams({
+        geometries: 'geojson',
+        overview: 'full',
+        steps: true,
+        access_token: mapboxAccessToken
+      });
+      
+      const response = await fetch(`${directionsUrl}?${params}`);
+      
+      if (!response.ok) {
+        throw new Error(`Directions API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.routes || data.routes.length === 0) {
+        throw new Error('No route found');
+      }
+      
+      const route = data.routes[0];
+      log('Route received:', route);
+      
+      // Draw the route
+      drawRoute(route.geometry);
+      
+      // Fit map to show both points
+      const bounds = new mapboxgl.LngLatBounds()
+        .extend(userCoords)
+        .extend(destCoords);
+      
+      map.fitBounds(bounds, {
+        padding: { top: 50, bottom: 50, left: 400, right: 50 },
+        duration: 1000
+      });
+      
+      // Show route info
+      const distance = (route.distance / 1000).toFixed(1);
+      const duration = Math.ceil(route.duration / 60);
+      showRouteInfo(`Khoảng cách: ${distance} km, Thời gian: ${duration} phút`);
+      
+    } catch (error) {
+      logError('Failed to get directions:', error);
+      
+      // Check if it's a location permission error
+      if (error.code === 1 || // PERMISSION_DENIED
+          error.message.includes('User denied') || 
+          error.message.includes('permission') ||
+          error.message.includes('geolocation')) {
+        // Show modal for location permission error
+        showModal(
+          'Lỗi truy cập vị trí',
+          'Không thể lấy vị trí của bạn. Vui lòng cho phép truy cập vị trí để sử dụng tính năng chỉ đường.'
+        );
+      } else if (error.message.includes('API')) {
+        // Show modal for API errors
+        showModal(
+          'Lỗi kết nối',
+          'Không thể kết nối với dịch vụ chỉ đường. Vui lòng kiểm tra kết nối mạng và thử lại.'
+        );
+      } else {
+        // Show modal for other errors
+        showModal(
+          'Đã xảy ra lỗi',
+          'Không thể lấy chỉ đường. Vui lòng thử lại sau.'
+        );
+      }
+    }
+  }
+
+  // Draw route on the map
+  function drawRoute(geometry) {
+    if (!map) return;
+    
+    log('Drawing route on map...');
+    
+    // Remove existing route if any
+    if (map.getSource(ROUTE_SOURCE_ID)) {
+      map.removeLayer(ROUTE_LAYER_ID);
+      map.removeSource(ROUTE_SOURCE_ID);
+    }
+    
+    // Add route source
+    map.addSource(ROUTE_SOURCE_ID, {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        properties: {},
+        geometry: geometry
+      }
+    });
+    
+    // Add route layer
+    map.addLayer({
+      id: ROUTE_LAYER_ID,
+      type: 'line',
+      source: ROUTE_SOURCE_ID,
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+      },
+      paint: {
+        'line-color': '#9a382d',
+        'line-width': 5,
+        'line-opacity': 0.8
+      }
+    });
+    
+    log('Route drawn successfully');
+  }
+
+  // Show route information
+  function showRouteInfo(message) {
+    // Remove existing info
+    const existingInfo = document.querySelector('.route-info');
+    if (existingInfo) {
+      existingInfo.remove();
+    }
+    
+    // Create info element
+    const info = document.createElement('div');
+    info.className = 'route-info';
+    info.textContent = message;
+    document.querySelector('.fullscreen').appendChild(info);
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      info.remove();
+    }, 5000);
+  }
+
+  // Show error message
+  function showError(message) {
+    // Update loading indicator to show error
+    const loadingEl = document.getElementById('map-loading');
+    if (loadingEl) {
+      loadingEl.innerHTML = `
+        <div class="error">
+          <p>${message}</p>
+        </div>
+      `;
+      loadingEl.style.display = 'flex';
+    }
+  }
+
+  // Show modal dialog
+  function showModal(title, message) {
+    const overlay = document.getElementById('modal-overlay');
+    const titleEl = document.getElementById('modal-title');
+    const messageEl = document.getElementById('modal-message');
+    
+    if (overlay && titleEl && messageEl) {
+      // Update content if provided
+      if (title) titleEl.textContent = title;
+      if (message) messageEl.textContent = message;
+      
+      // Show modal
+      overlay.style.display = 'flex';
+      overlay.setAttribute('aria-hidden', 'false');
+      
+      // Focus on close button for accessibility
+      const closeBtn = overlay.querySelector('.modal-close');
+      if (closeBtn) {
+        closeBtn.focus();
+      }
+      
+      log('Modal shown:', title || 'Lỗi truy cập vị trí');
+    }
+  }
+
+  // Hide modal dialog
+  function hideModal() {
+    const overlay = document.getElementById('modal-overlay');
+    if (overlay) {
+      overlay.style.display = 'none';
+      overlay.setAttribute('aria-hidden', 'true');
+      log('Modal hidden');
+    }
+  }
+
+  // Setup modal event listeners
+  function setupModalListeners() {
+    const overlay = document.getElementById('modal-overlay');
+    if (!overlay) return;
+    
+    // Close button click
+    const closeBtn = overlay.querySelector('.modal-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        hideModal();
+      });
+    }
+    
+    // Overlay click (outside dialog)
+    overlay.addEventListener('click', (e) => {
+      // Only close if clicking the overlay itself, not the dialog
+      if (e.target === overlay) {
+        hideModal();
+      }
+    });
+    
+    // ESC key to close
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.style.display === 'flex') {
+        hideModal();
+      }
+    });
+  }
+
+  // Start initialization when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      initialize();
+      setupModalListeners();
+    });
+  } else {
+    // DOM is already ready
+    initialize();
+    setupModalListeners();
+  }
+</script>
+
+<style>
+  /* Base layout */
+  .fullscreen { 
+    position: relative; 
+    width: 100vw; 
+    height: 100vh; 
+    overflow: hidden;
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  }
+  
+  .map { 
+    position: absolute; 
+    inset: 0; 
+    background: #f0f0f0;
+  }
+
+  /* Loading indicator */
+  #map-loading {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #9a382d;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  #map-loading p {
+    color: #9a382d;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+  
+  .error {
+    text-align: center;
+    color: #d32f2f;
+  }
+
+  /* Floating side panel */
+  .panel {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    bottom: 1rem;
+    width: min(360px, 88vw);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(255, 250, 240, 0.92);
+    border: 1px solid rgba(154, 56, 45, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+    padding: 1rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 10;
+  }
+  
+  .panel::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .panel::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 3px;
+  }
+  
+  .panel::-webkit-scrollbar-thumb {
+    background: rgba(154, 56, 45, 0.3);
+    border-radius: 3px;
+  }
+  
+  .panel h2 { 
+    margin: 0 0 1rem; 
+    font-family: 'Merriweather', Georgia, 'Times New Roman', serif; 
+    color: #9a382d; 
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+  
+  .empty {
+    text-align: center;
+    color: #666;
+    padding: 2rem 1rem;
+  }
+  
+  .empty p {
+    margin: 0.5rem 0;
+  }
+  
+  .empty code {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+  
+  /* Location items */
+  .item {
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 12px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(154, 56, 45, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.2s ease;
+  }
+  
+  .item:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+  }
+  
+  .item:active {
+    transform: translateY(0);
+  }
+  
+  .item h3 { 
+    margin: 0 0 0.5rem; 
+    font-family: 'Merriweather', Georgia, 'Times New Roman', serif; 
+    color: #9a382d; 
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  
+  .item p { 
+    margin: 0 0 0.75rem; 
+    color: #4a2c2a; 
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  
+  /* Action buttons */
+  .actions { 
+    display: flex; 
+    gap: 0.5rem; 
+  }
+  
+  .actions button {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex: 1;
+  }
+  
+  .actions .focus {
+    background: #fff;
+    color: #9a382d;
+    border: 2px solid #9a382d;
+  }
+  
+  .actions .focus:hover {
+    background: #9a382d;
+    color: white;
+  }
+  
+  .actions .directions { 
+    background: #9a382d; 
+    color: white; 
+    border: 2px solid #9a382d;
+  }
+  
+  .actions .directions:hover {
+    background: #7a2820;
+    border-color: #7a2820;
+  }
+
+  /* Back to Home link */
+  .home {
+    position: absolute;
+    top: 1rem;
+    left: 24rem;
+    z-index: 11;
+    text-decoration: none;
+    font-weight: 600;
+    color: #fff;
+    background: rgba(154, 56, 45, 0.9);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+  }
+  
+  .home:hover {
+    background: rgba(154, 56, 45, 1);
+    transform: translateY(-2px);
+  }
+
+  /* Logo placeholder */
+  .brand {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 11;
+    color: #fff;
+    font-weight: 800;
+    background: rgba(154, 56, 45, 0.9);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+  }
+
+  /* Custom marker styling */
+  .custom-marker {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #9a382d;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .custom-marker:hover {
+    transform: scale(1.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+  
+  /* Popup styling */
+  .location-popup .mapboxgl-popup-content {
+    padding: 1rem;
+    border-radius: 8px;
+    min-width: 200px;
+    max-width: 300px;
+  }
+  
+  .popup-content h3 {
+    margin: 0 0 0.5rem;
+    color: #9a382d;
+    font-family: 'Merriweather', Georgia, 'Times New Roman', serif;
+    font-size: 1.1rem;
+  }
+  
+  .popup-content p {
+    margin: 0;
+    color: #4a2c2a;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+  
+  /* Route info */
+  .route-info {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(154, 56, 45, 0.9);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    z-index: 10;
+    animation: slideUp 0.3s ease;
+  }
+  
+  @keyframes slideUp {
+    from {
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* Modal styles */
+  .modal-overlay {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  .modal-dialog {
+    position: relative;
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 480px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUpModal 0.3s ease;
+  }
+  
+  @keyframes slideUpModal {
+    from {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  .modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    font-size: 28px;
+    line-height: 1;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  
+  .modal-close:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #333;
+    transform: rotate(90deg);
+  }
+  
+  .modal-close:focus {
+    outline: 2px solid #9a382d;
+    outline-offset: 2px;
+  }
+  
+  .modal-content {
+    text-align: center;
+  }
+  
+  .modal-title {
+    margin: 0 0 1rem;
+    font-family: 'Merriweather', Georgia, 'Times New Roman', serif;
+    font-size: 1.5rem;
+    color: #9a382d;
+    font-weight: 700;
+  }
+  
+  .modal-message {
+    margin: 1rem 0 1.5rem;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: #4a2c2a;
+  }
+  
+  .modal-icon {
+    margin: 1.5rem auto 0;
+    display: inline-block;
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+  
+  /* Prevent body scroll when modal is open */
+  body:has(.modal-overlay[style*="flex"]) {
+    overflow: hidden;
+  }
+
+  /* Responsive design */
+  @media (max-width: 980px) {
+    .panel { 
+      left: 0.75rem; 
+      right: 0.75rem; 
+      width: auto; 
+      top: 0.75rem; 
+      bottom: auto; 
+      max-height: 50vh; 
+    }
+    
+    .home {
+      left: auto;
+      right: 0.75rem;
+      top: auto;
+      bottom: 0.75rem;
+    }
+    
+    .brand {
+      display: none;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .panel h2 {
+      font-size: 1.1rem;
+    }
+    
+    .item h3 {
+      font-size: 1rem;
+    }
+    
+    .item p {
+      font-size: 0.9rem;
+    }
+    
+    .actions button {
+      font-size: 0.85rem;
+      padding: 0.4rem 0.8rem;
+    }
+  }
+</style>

@@ -1,17 +1,41 @@
 ---
 import DocsLayout from '../layouts/DocsLayout.astro';
 import site from '../data/site';
+const heroImage = 'https://images.unsplash.com/photo-1558981525-6f0c94958bb6?auto=format&fit=crop&w=1920&q=70';
 ---
 <DocsLayout title={`${site.titleEn} — Overview`}>
-  <section class="hero">
-    <h1>
-      <span data-lang="en">Welcome to {site.titleEn}</span>
-      <span data-lang="vi">Chào mừng đến với {site.titleVi}</span>
-    </h1>
-    <p>
-      <span data-lang="en">{site.descriptionEn}</span>
-      <span data-lang="vi">{site.descriptionVi}</span>
-    </p>
+  <section class="landing-viewport" aria-label="Landing">
+    <div class="landing-menu">
+      <a href="/" class="brand" aria-label={`${site.titleEn} / ${site.titleVi}`}>
+        <span class="dot" />
+        <span data-lang="en">{site.titleEn}</span>
+        <span data-lang="vi">{site.titleVi}</span>
+      </a>
+      <nav class="menu" aria-label="Main">
+        {site.nav.map((item) => (
+          <a href={item.href}>
+            <span data-lang="en">{item.titleEn}</span>
+            <span data-lang="vi">{item.titleVi}</span>
+          </a>
+        ))}
+      </nav>
+    </div>
+    <div class="landing-photo">
+      <div class="image" style={`background-image:url(${heroImage})`} data-parallax />
+      <div class="overlay" />
+      <div class="landing-title">
+        <span class="kicker" data-lang="en">Discovering the Great Forest</span>
+        <span class="kicker" data-lang="vi">Khám phá đại ngàn</span>
+        <h1>
+          <span data-lang="en">Gia Lai, Central Highlands</span>
+          <span data-lang="vi">Gia Lai, Tây Nguyên</span>
+        </h1>
+      </div>
+      <div class="landing-scroll">Scroll ↓</div>
+    </div>
+  </section>
+
+  <section class="container" style="margin-top:2rem">
     <div class="cards">
       <a class="card wood" href="/history">
         <h3>
@@ -53,6 +77,39 @@ import site from '../data/site';
           <span data-lang="vi">Món ăn tiêu biểu và hương vị bản địa.</span>
         </p>
       </a>
+      <a class="card explore" href="/map">
+        <h3>
+          <span data-lang="en">Explore on Map</span>
+          <span data-lang="vi">Khám phá trên bản đồ</span>
+        </h3>
+        <p>
+          <span data-lang="en">See all places on an interactive map.</span>
+          <span data-lang="vi">Xem các điểm đến trên bản đồ tương tác.</span>
+        </p>
+      </a>
     </div>
   </section>
+
+  <script>
+    // Lightweight parallax effect for the hero image
+    const layer = document.querySelector('[data-parallax]');
+    function onScroll() {
+      const y = window.scrollY * 0.3; // slower background
+      if (layer) layer.style.transform = `translateY(${y}px) scale(1.05)`;
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+  </script>
+
+<style>
+  .card.explore {
+    border: 2px solid rgba(154,56,45,0.35);
+    box-shadow: 0 8px 24px rgba(154,56,45,0.12);
+  }
+  .card.explore h3 { color: var(--accent); }
+  .card.explore:hover { background: rgba(154,56,45,0.06); }
+  .map-cta {
+    display: inline-block; margin-top: 1rem; padding: .7rem 1rem; border-radius: 12px;
+    background: var(--accent); color: #fff; font-weight: 700;
+  }
+</style>
 </DocsLayout>
