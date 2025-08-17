@@ -25,6 +25,7 @@ const site: SiteData = {
     { href: '/culture', titleEn: 'Culture', titleVi: 'Văn hoá' },
     { href: '/attractions', titleEn: 'Attractions', titleVi: 'Danh thắng' },
     { href: '/food', titleEn: 'Food', titleVi: 'Ẩm thực' },
+    { href: '/map', titleEn: 'Map', titleVi: 'Bản đồ' },
     { href: '/about', titleEn: 'About', titleVi: 'Giới thiệu' }
   ],
 };

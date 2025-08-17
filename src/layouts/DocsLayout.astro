@@ -69,6 +69,24 @@ const {
         });
       })();
     </script>
+    <script is:inline>
+      (function() {
+        const ASK_KEY = 'geo-permission-asked';
+        if (localStorage.getItem(ASK_KEY)) return;
+        function request() {
+          if (!('geolocation' in navigator)) return;
+          navigator.geolocation.getCurrentPosition(function(pos){
+            localStorage.setItem('user-location', JSON.stringify({
+              lon: pos.coords.longitude,
+              lat: pos.coords.latitude,
+              ts: Date.now()
+            }));
+            localStorage.setItem(ASK_KEY, '1');
+          }, function(){ localStorage.setItem(ASK_KEY, '1'); }, { enableHighAccuracy: true, timeout: 8000 });
+        }
+        window.addEventListener('load', request, { once: true });
+      })();
+    </script>
   </head>
   <body>
     <Header />
