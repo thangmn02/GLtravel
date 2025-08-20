@@ -1,0 +1,249 @@
+---
+// GPSStatus.astro - Reactive GPS status indicator
+---
+
+<div class="gps-status-wrapper">
+  <div id="gps-status" class="stat-item">
+    <div class="stat-number">
+      <span id="gps-icon">📍</span>
+    </div>
+    <div class="stat-label">
+      <span id="gps-label-en" data-lang="en">Checking...</span>
+      <span id="gps-label-vi" data-lang="vi" style="display: none;">Đang kiểm tra...</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .gps-status-wrapper {
+    position: relative;
+  }
+
+  .stat-item {
+    text-align: center;
+    color: white;
+  }
+
+  .stat-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+    transition: all 0.3s ease;
+  }
+
+  #gps-icon {
+    display: inline-block;
+    transition: transform 0.3s ease;
+  }
+
+  #gps-icon.active {
+    animation: pulse-gps 2s infinite;
+  }
+
+  #gps-icon.denied {
+    opacity: 0.5;
+    filter: grayscale(1);
+  }
+
+  .stat-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-top: 4px;
+    opacity: 0.9;
+  }
+
+  @keyframes pulse-gps {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+
+  /* Status colors */
+  .gps-ready {
+    color: #4ade80;
+  }
+
+  .gps-denied {
+    color: #f87171;
+  }
+
+  .gps-unknown {
+    color: #fbbf24;
+  }
+</style>
+
+<script>
+  import { checkPermissionState, requestLocation, shouldAskPermission, markPermissionAsked } from '../utils/geo';
+
+  class GPSStatusManager {
+    private statusIcon: HTMLElement;
+    private labelEn: HTMLElement;
+    private labelVi: HTMLElement;
+    private currentLang: string = 'en';
+
+    constructor() {
+      this.statusIcon = document.getElementById('gps-icon')!;
+      this.labelEn = document.getElementById('gps-label-en')!;
+      this.labelVi = document.getElementById('gps-label-vi')!;
+      
+      this.init();
+    }
+
+    async init() {
+      // Check current language
+      this.detectLanguage();
+      
+      // Check initial permission state
+      await this.updateStatus();
+      
+      // Listen for permission changes
+      window.addEventListener('geopermissionchange', () => {
+        this.updateStatus();
+      });
+
+      // Listen for language changes
+      document.addEventListener('languagechange', () => {
+        this.detectLanguage();
+      });
+
+      // Auto-request permission on first visit
+      if (shouldAskPermission()) {
+        await this.requestPermission();
+      }
+    }
+
+    detectLanguage() {
+      // Check which language label is visible
+      const enVisible = this.labelEn.style.display !== 'none';
+      this.currentLang = enVisible ? 'en' : 'vi';
+    }
+
+    async updateStatus() {
+      const state = await checkPermissionState();
+      
+      switch (state.state) {
+        case 'granted':
+          this.setStatus('ready');
+          break;
+        case 'denied':
+          this.setStatus('denied');
+          break;
+        case 'prompt':
+        case 'unknown':
+          this.setStatus('unknown');
+          break;
+      }
+    }
+
+    setStatus(status: 'ready' | 'denied' | 'unknown') {
+      // Update icon
+      this.statusIcon.className = '';
+      
+      // Update labels and colors
+      switch (status) {
+        case 'ready':
+          this.statusIcon.textContent = '✅';
+          this.statusIcon.classList.add('active');
+          this.labelEn.textContent = 'GPS Ready';
+          this.labelVi.textContent = 'GPS Sẵn sàng';
+          this.statusIcon.parentElement!.classList.add('gps-ready');
+          break;
+          
+        case 'denied':
+          this.statusIcon.textContent = '❌';
+          this.statusIcon.classList.add('denied');
+          this.labelEn.textContent = 'GPS Denied';
+          this.labelVi.textContent = 'GPS Bị từ chối';
+          this.statusIcon.parentElement!.classList.add('gps-denied');
+          break;
+          
+        case 'unknown':
+          this.statusIcon.textContent = '📍';
+          this.labelEn.textContent = 'GPS Available';
+          this.labelVi.textContent = 'GPS Có sẵn';
+          this.statusIcon.parentElement!.classList.add('gps-unknown');
+          break;
+      }
+    }
+
+    async requestPermission() {
+      // Only request if we should (not recently denied)
+      if (!shouldAskPermission()) return;
+      
+      markPermissionAsked();
+      
+      // Show a toast notification
+      this.showToast(
+        this.currentLang === 'en' 
+          ? '📍 Enable location for personalized experience' 
+          : '📍 Bật vị trí để có trải nghiệm cá nhân hóa'
+      );
+      
+      // Request location
+      const result = await requestLocation();
+      
+      if (result.success) {
+        this.showToast(
+          this.currentLang === 'en'
+            ? '✅ Location enabled successfully!'
+            : '✅ Đã bật vị trí thành công!'
+        );
+      } else if (result.errorCode === 'PERMISSION_DENIED') {
+        this.showToast(
+          this.currentLang === 'en'
+            ? '❌ Location access denied. You can enable it in browser settings.'
+            : '❌ Truy cập vị trí bị từ chối. Bạn có thể bật trong cài đặt trình duyệt.'
+        );
+      }
+      
+      await this.updateStatus();
+    }
+
+    showToast(message: string) {
+      // Create toast element
+      const toast = document.createElement('div');
+      toast.className = 'gps-toast';
+      toast.textContent = message;
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        z-index: 9999;
+        animation: slideUp 0.3s ease;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      `;
+      
+      // Add animation
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes slideUp {
+          from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+          to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
+      
+      document.body.appendChild(toast);
+      
+      // Remove after 5 seconds
+      setTimeout(() => {
+        toast.style.animation = 'slideUp 0.3s ease reverse';
+        setTimeout(() => {
+          toast.remove();
+          style.remove();
+        }, 300);
+      }, 5000);
+    }
+  }
+
+  // Initialize when DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    new GPSStatusManager();
+  });
+</script>

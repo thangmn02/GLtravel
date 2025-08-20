@@ -1,19 +1,29 @@
 ---
+// Minimal page setup - no standard layout
 import InteractiveMap from '../components/InteractiveMap.astro';
+import site from '../data/site';
 ---
 <!DOCTYPE html>
-<html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Bản đồ - Gia Lai</title>
-    <link rel="icon" href="/favicon.svg" />
-    <style>
-      html, body { height: 100%; }
-      body { margin: 0; padding: 0; }
-    </style>
-  </head>
-  <body>
-    <InteractiveMap />
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interactive Map — {site.titleEn}</title>
+  <meta name="description" content="Explore Gia Lai Province with our interactive map" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body>
+  <!-- Render the full-screen interactive map component -->
+  <InteractiveMap />
+  
+  <style>
+    /* Remove default body margins and prevent scrollbars */
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+  </style>
+</body>
 </html>

@@ -1,41 +1,18 @@
 ---
 import DocsLayout from '../layouts/DocsLayout.astro';
+import GPSStatus from '../components/GPSStatus.astro';
 import site from '../data/site';
-const heroImage = 'https://images.unsplash.com/photo-1558981525-6f0c94958bb6?auto=format&fit=crop&w=1920&q=70';
 ---
 <DocsLayout title={`${site.titleEn} — Overview`}>
-  <section class="landing-viewport" aria-label="Landing">
-    <div class="landing-menu">
-      <a href="/" class="brand" aria-label={`${site.titleEn} / ${site.titleVi}`}>
-        <span class="dot" />
-        <span data-lang="en">{site.titleEn}</span>
-        <span data-lang="vi">{site.titleVi}</span>
-      </a>
-      <nav class="menu" aria-label="Main">
-        {site.nav.map((item) => (
-          <a href={item.href}>
-            <span data-lang="en">{item.titleEn}</span>
-            <span data-lang="vi">{item.titleVi}</span>
-          </a>
-        ))}
-      </nav>
-    </div>
-    <div class="landing-photo">
-      <div class="image" style={`background-image:url(${heroImage})`} data-parallax />
-      <div class="overlay" />
-      <div class="landing-title">
-        <span class="kicker" data-lang="en">Discovering the Great Forest</span>
-        <span class="kicker" data-lang="vi">Khám phá đại ngàn</span>
-        <h1>
-          <span data-lang="en">Gia Lai, Central Highlands</span>
-          <span data-lang="vi">Gia Lai, Tây Nguyên</span>
-        </h1>
-      </div>
-      <div class="landing-scroll">Scroll ↓</div>
-    </div>
-  </section>
-
-  <section class="container" style="margin-top:2rem">
+  <section class="hero">
+    <h1>
+      <span data-lang="en">Welcome to {site.titleEn}</span>
+      <span data-lang="vi">Chào mừng đến với {site.titleVi}</span>
+    </h1>
+    <p>
+      <span data-lang="en">{site.descriptionEn}</span>
+      <span data-lang="vi">{site.descriptionVi}</span>
+    </p>
     <div class="cards">
       <a class="card wood" href="/history">
         <h3>
@@ -77,39 +54,308 @@ const heroImage = 'https://images.unsplash.com/photo-1558981525-6f0c94958bb6?aut
           <span data-lang="vi">Món ăn tiêu biểu và hương vị bản địa.</span>
         </p>
       </a>
-      <a class="card explore" href="/map">
-        <h3>
-          <span data-lang="en">Explore on Map</span>
-          <span data-lang="vi">Khám phá trên bản đồ</span>
-        </h3>
-        <p>
-          <span data-lang="en">See all places on an interactive map.</span>
-          <span data-lang="vi">Xem các điểm đến trên bản đồ tương tác.</span>
-        </p>
-      </a>
+    </div>
+    
+    <!-- Interactive Map Hero Section -->
+    <div class="map-hero-section">
+      <div class="map-hero-content">
+        <div class="map-hero-text">
+          <h2 class="map-hero-title">
+            <span data-lang="en">🗺️ Discover Gia Lai</span>
+            <span data-lang="vi">🗺️ Khám phá Gia Lai</span>
+          </h2>
+          <p class="map-hero-subtitle">
+            <span data-lang="en">Explore our interactive map with 3D buildings, real-time navigation, and detailed location information</span>
+            <span data-lang="vi">Khám phá bản đồ tương tác với các tòa nhà 3D, điều hướng thời gian thực và thông tin vị trí chi tiết</span>
+          </p>
+          <a href="/map" class="map-hero-button" id="map-cta-button">
+            <div class="button-content">
+              <svg class="button-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <span class="button-text">
+                <span data-lang="en">Launch Interactive Map</span>
+                <span data-lang="vi">Mở Bản đồ Tương tác</span>
+              </span>
+              <svg class="button-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12h14m-7-7l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </a>
+        </div>
+        <div class="map-hero-preview">
+          <div class="map-preview-container">
+            <div class="map-preview-image"></div>
+            <div class="map-preview-overlay">
+              <div class="preview-stats">
+                <div class="stat-item">
+                  <div class="stat-number">6</div>
+                  <div class="stat-label">
+                    <span data-lang="en">Locations</span>
+                    <span data-lang="vi">Địa điểm</span>
+                  </div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-number">3D</div>
+                  <div class="stat-label">
+                    <span data-lang="en">View</span>
+                    <span data-lang="vi">Góc nhìn</span>
+                  </div>
+                </div>
+                <GPSStatus />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <script>
-    // Lightweight parallax effect for the hero image
-    const layer = document.querySelector('[data-parallax]');
-    function onScroll() {
-      const y = window.scrollY * 0.3; // slower background
-      if (layer) layer.style.transform = `translateY(${y}px) scale(1.05)`;
+  <style>
+    /* Map Hero Section */
+    .map-hero-section {
+      margin: 3rem 0;
+      padding: 3rem 0;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
     }
-    window.addEventListener('scroll', onScroll, { passive: true });
-  </script>
-
-<style>
-  .card.explore {
-    border: 2px solid rgba(154,56,45,0.35);
-    box-shadow: 0 8px 24px rgba(154,56,45,0.12);
-  }
-  .card.explore h3 { color: var(--accent); }
-  .card.explore:hover { background: rgba(154,56,45,0.06); }
-  .map-cta {
-    display: inline-block; margin-top: 1rem; padding: .7rem 1rem; border-radius: 12px;
-    background: var(--accent); color: #fff; font-weight: 700;
-  }
-</style>
+    
+    .map-hero-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="%23ffffff" stroke-width="0.5" opacity="0.3"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+      opacity: 0.3;
+      pointer-events: none;
+    }
+    
+    .map-hero-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .map-hero-text {
+      padding: 0 2rem;
+    }
+    
+    .map-hero-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin: 0 0 1rem 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+    }
+    
+    .map-hero-subtitle {
+      font-size: 1.2rem;
+      color: #666;
+      margin: 0 0 2rem 0;
+      line-height: 1.5;
+    }
+    
+    .map-hero-button {
+      display: inline-flex;
+      align-items: center;
+      padding: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .button-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 28px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .button-icon {
+      transition: transform 0.3s ease;
+    }
+    
+    .button-arrow {
+      transition: transform 0.3s ease;
+    }
+    
+    .map-hero-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+    }
+    
+    .map-hero-button:hover .button-icon {
+      transform: scale(1.1) rotate(-10deg);
+    }
+    
+    .map-hero-button:hover .button-arrow {
+      transform: translateX(4px);
+    }
+    
+    .map-hero-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.6s;
+    }
+    
+    .map-hero-button:hover::before {
+      left: 100%;
+    }
+    
+    /* Map Preview */
+    .map-hero-preview {
+      padding: 0 2rem;
+    }
+    
+    .map-preview-container {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+      transform: perspective(1000px) rotateY(-5deg) rotateX(2deg);
+      transition: transform 0.3s ease;
+    }
+    
+    .map-preview-container:hover {
+      transform: perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1.02);
+    }
+    
+    .map-preview-image {
+      width: 100%;
+      height: 300px;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .map-preview-image::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.8) 2px, transparent 2px),
+        radial-gradient(circle at 70% 60%, rgba(255,255,255,0.6) 1px, transparent 1px),
+        radial-gradient(circle at 40% 80%, rgba(255,255,255,0.7) 1.5px, transparent 1.5px),
+        radial-gradient(circle at 80% 20%, rgba(255,255,255,0.5) 1px, transparent 1px),
+        linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+      background-size: 100px 100px, 150px 150px, 80px 80px, 120px 120px, 100% 100%;
+      animation: mapAnimation 20s infinite linear;
+    }
+    
+    @keyframes mapAnimation {
+      0% { transform: translateX(0) translateY(0); }
+      25% { transform: translateX(-10px) translateY(-5px); }
+      50% { transform: translateX(-5px) translateY(-10px); }
+      75% { transform: translateX(-15px) translateY(-3px); }
+      100% { transform: translateX(0) translateY(0); }
+    }
+    
+    .map-preview-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+    }
+    
+    .preview-stats {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+    
+    .stat-item {
+      text-align: center;
+      color: white;
+    }
+    
+    .stat-number {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #667eea;
+      text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+    }
+    
+    .stat-label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-top: 4px;
+      opacity: 0.9;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .map-hero-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        text-align: center;
+      }
+      
+      .map-hero-title {
+        font-size: 2rem;
+      }
+      
+      .map-hero-subtitle {
+        font-size: 1.1rem;
+      }
+      
+      .map-hero-button {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .map-preview-container {
+        transform: none;
+      }
+      
+      .map-preview-container:hover {
+        transform: scale(1.02);
+      }
+    }
+    
+    /* Pulse animation for the button */
+    @keyframes pulse {
+      0% { box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); }
+      50% { box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5); }
+      100% { box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3); }
+    }
+    
+    .map-hero-button {
+      animation: pulse 2s infinite;
+    }
+    
+    .map-hero-button:hover {
+      animation: none;
+    }
+  </style>
 </DocsLayout>

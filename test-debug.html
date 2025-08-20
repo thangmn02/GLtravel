@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        .log {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .warning {
+            color: orange;
+        }
+    </style>
+</head>
+<body>
+    <h1>Panel Debug Test</h1>
+    
+    <div class="test-section">
+        <h2>Panel Elements Test</h2>
+        <div id="element-test"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Console Output</h2>
+        <div id="console-output"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Instructions</h2>
+        <ol>
+            <li>Open your map page at <a href="http://localhost:4322/map" target="_blank">http://localhost:4322/map</a></li>
+            <li>Open the browser console (F12)</li>
+            <li>Look for the console logs that start with emojis (🚀, 📊, 🔍, 🎯, etc.)</li>
+            <li>Share what you see in the console, especially any error messages</li>
+        </ol>
+    </div>
+    
+    <script>
+        // Test if we can find the panel elements
+        function testElements() {
+            const tests = [
+                { id: 'panel-toggle', name: 'Panel Toggle Button' },
+                { id: 'locations-panel', name: 'Locations Panel' },
+                { id: 'locations-list', name: 'Locations List Container' },
+                { selector: '.tab-button', name: 'Tab Buttons' },
+                { selector: '.tab-content', name: 'Tab Content Areas' }
+            ];
+            
+            const output = document.getElementById('element-test');
+            let html = '<h3>Testing for required elements:</h3>';
+            
+            tests.forEach(test => {
+                let element;
+                let count = 0;
+                
+                if (test.id) {
+                    element = document.getElementById(test.id);
+                    count = element ? 1 : 0;
+                } else if (test.selector) {
+                    const elements = document.querySelectorAll(test.selector);
+                    count = elements.length;
+                    element = count > 0;
+                }
+                
+                const status = element ? 'success' : 'error';
+                const icon = element ? '✅' : '❌';
+                
+                html += `<div class="log ${status}">
+                    ${icon} ${test.name}: ${count > 0 ? `Found (${count})` : 'NOT FOUND'}
+                </div>`;
+            });
+            
+            output.innerHTML = html;
+        }
+        
+        // Run test when page loads
+        setTimeout(testElements, 1000);
+        
+        // Log instructions
+        const consoleOutput = document.getElementById('console-output');
+        consoleOutput.innerHTML = `
+            <div class="log warning">
+                ⚠️ Please check the browser console on the map page for the following:
+            </div>
+            <div class="log">
+                1. 🚀 Client script started - Should show locations data<br>
+                2. 📊 Number of locations received - Should show a number<br>
+                3. 🔍 InitializeMap function called - Map initialization<br>
+                4. 🎯 SetupPanel function called - Panel setup<br>
+                5. Any error messages (especially ❌ symbols)
+            </div>
+        `;
+    </script>
+</body>
+</html>
