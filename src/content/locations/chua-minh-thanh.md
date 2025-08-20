@@ -1,6 +1,6 @@
 ---
-title: 'Chùa Minh Thành'
-description: 'Ngôi chùa nổi tiếng ở Pleiku với kiến trúc Á Đông tinh xảo và không gian tĩnh tại.'
+title: "Chùa Minh Thành"
+description: "Ngôi chùa nổi tiếng ở Pleiku với kiến trúc Á Đông tinh xảo và không gian tĩnh tại."
 coordinates: [108.0144, 13.9717]
 ---
 

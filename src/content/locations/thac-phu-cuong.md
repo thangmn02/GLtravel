@@ -1,6 +1,6 @@
 ---
-title: 'Thác Phú Cường'
-description: 'Thác nước hùng vĩ giữa Chư Sê, đổ xuống những tảng đá bazan tạo bọt trắng xóa quanh năm.'
+title: "Thác Phú Cường"
+description: "Thác nước hùng vĩ giữa Chư Sê, đổ xuống những tảng đá bazan tạo bọt trắng xóa quanh năm."
 coordinates: [108.0775, 13.5136]
 ---
 
