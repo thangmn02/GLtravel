@@ -1,0 +1,916 @@
+---
+// InteractiveMap.astro - Redesigned with floating side panel
+import { getCollection } from 'astro:content';
+
+// Fetch all locations from content collection
+const locations = await getCollection('locations');
+
+// Transform locations for JavaScript use
+const locationsData = locations.map(location => ({
+  id: location.slug,
+  title: location.data.title,
+  titleVi: location.data.titleVi,
+  lat: location.data.lat,
+  lng: location.data.lng,
+  excerpt: location.data.excerpt,
+  excerptVi: location.data.excerptVi,
+  category: location.data.category,
+  featured: location.data.featured || false
+}));
+---
+
+<div class="map-container">
+  <!-- Map canvas - fills entire viewport -->
+  <div id="map"></div>
+  
+  <!-- New Floating Side Panel -->
+  <aside class="floating-panel">
+    <h1 class="panel-title">Các địa điểm nổi bật</h1>
+    
+    <!-- Locations List Container (Search bar removed - Geocoder will be on the map) -->
+    <div id="locations-list" class="locations-list">
+      <!-- Location items will be dynamically added here -->
+    </div>
+  </aside>
+  
+  <!-- Logo Top Left -->
+  <img 
+    src="/images/logo/logo gl 1.png" 
+    alt="Gia Lai Logo" 
+    class="logo logo-left"
+    onerror="this.src='/images/placeholder-logo.svg'"
+  />
+  
+  <!-- Back to Home button -->
+  <a href="/" class="back-button">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M5 12L12 19M5 12L12 5"/>
+    </svg>
+    <span>Trang chủ</span>
+  </a>
+</div>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;500;600&display=swap');
+  
+  /* Full-screen map container */
+  .map-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  /* Map fills entire container */
+  #map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* Floating Side Panel - Central Highlands Theme */
+  .floating-panel {
+    position: absolute;
+    top: 80px;  /* Moved down to avoid any potential overlap */
+    left: 20px;
+    width: 360px;
+    max-height: calc(100vh - 120px);  /* Adjusted max height */
+    background: #FAF3E0;
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(74, 44, 42, 0.15);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #DCD0B4;
+  }
+  
+  .panel-title {
+    margin: 0;
+    padding: 20px 24px;
+    font-family: 'Merriweather', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #4a2c2a;
+    border-bottom: 1px solid #E8D5C4;
+    background: linear-gradient(to bottom, #FEFBF6, #FAF3E0);
+    letter-spacing: -0.02em;
+  }
+  
+  /* Custom styles for Mapbox Geocoder */
+  .mapboxgl-ctrl-geocoder {
+    max-width: 400px;
+    width: 100%;
+    border: 1px solid #DCD0B4;
+    box-shadow: 0 4px 16px rgba(74, 44, 42, 0.12);
+    font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin-right: 60px;  /* Add margin to keep it away from navigation controls */
+  }
+  
+  .mapboxgl-ctrl-geocoder--input {
+    font-family: 'Open Sans', sans-serif;
+    color: #4a2c2a;
+    padding: 10px 45px;
+    height: 44px;
+  }
+  
+  .mapboxgl-ctrl-geocoder--input:focus {
+    color: #4a2c2a;
+    outline: 2px solid #9a7c68;
+    outline-offset: -2px;
+  }
+  
+  .mapboxgl-ctrl-geocoder .suggestions {
+    font-family: 'Open Sans', sans-serif;
+    border: 1px solid #DCD0B4;
+    box-shadow: 0 4px 16px rgba(74, 44, 42, 0.12);
+  }
+  
+  .mapboxgl-ctrl-geocoder .suggestions > li > a {
+    padding: 8px 10px;
+    color: #4a2c2a;
+  }
+  
+  .mapboxgl-ctrl-geocoder .suggestions > .active > a,
+  .mapboxgl-ctrl-geocoder .suggestions > li > a:hover {
+    background-color: #F2EADC;
+    color: #2d1a19;
+  }
+  
+  /* Locations List */
+  .locations-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 8px 8px 8px;
+    background: transparent;
+  }
+  
+  /* Location Item - Central Highlands Theme */
+  .location-item {
+    padding: 16px;
+    margin: 0 8px 8px 8px;
+    background: transparent;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    border: 1px solid transparent;  /* Default transparent border to prevent layout shift */
+    border-bottom: 1px solid #E8D5C4;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .location-item:last-child {
+    border-bottom: none;
+  }
+  
+  /* Hover effects */
+  .location-item:hover {
+    background: #F2EADC;
+    /* removed padding shift */
+    border: 1px solid #9a382d;  /* Add reddish-brown border on hover */
+    border-bottom: 1px solid #9a382d;  /* Ensure bottom border is also colored */
+  }
+  
+  .location-item.active {
+    background: #F2EADC;
+  }
+  
+  .location-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 70%;
+    background: #9a382d;
+    border-radius: 0 2px 2px 0;
+  }
+  
+  .location-number {
+    display: inline-block;
+    min-width: 24px;
+    font-family: 'Merriweather', serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #9a7c68;
+    margin-right: 12px;
+    flex-shrink: 0;
+    line-height: 1.6;
+  }
+  
+  .location-item.active .location-number {
+    color: #9a382d;
+    font-weight: 700;
+  }
+  
+  .location-content {
+    display: flex;
+    align-items: flex-start;
+    flex: 1;
+  }
+  
+  .location-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 4px;
+  }
+  
+  .location-source {
+    font-size: 11px;
+    color: #9a7c68;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+  }
+  
+  .directions-link {
+    padding: 0;
+    background: transparent;
+    color: #9a382d;
+    border: none;
+    border-radius: 0;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    margin-top: 4px;
+  }
+  
+  .directions-link:hover {
+    color: #c74a3f;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  
+  .directions-link svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+  
+  .location-name {
+    font-family: 'Merriweather', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #4a2c2a;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+    margin-bottom: 2px;
+  }
+  
+  .location-item:hover .location-name {
+    color: #2d1a19;
+  }
+  
+  .location-item.active .location-name {
+    color: #9a382d;
+    font-weight: 700;
+  }
+  
+  /* Custom Scrollbar - Earthy Theme */
+  .locations-list::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .locations-list::-webkit-scrollbar-track {
+    background: #F5EFE3;
+    border-radius: 3px;
+  }
+  
+  .locations-list::-webkit-scrollbar-thumb {
+    background: #C4A882;
+    border-radius: 3px;
+  }
+  
+  .locations-list::-webkit-scrollbar-thumb:hover {
+    background: #9a7c68;
+  }
+  
+  /* Logos */
+  .logo {
+    position: absolute;
+    height: 250px;  /* Increased to 2.5x (100px * 2.5 = 250px) */
+    z-index: 1001;
+    /* Removed background, padding, border-radius, and box-shadow for transparency */
+  }
+  
+  .logo-left {
+    top: 20px;
+    left: 400px;  /* Adjusted slightly since panel moved down */
+  }
+  
+  .logo-right {
+    top: 20px;
+    right: 20px;
+  }
+  
+  /* Back Button */
+  .back-button {
+    position: absolute;
+    bottom: 30px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: white;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    font-weight: 600;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+    transition: all 0.2s;
+  }
+  
+  .back-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    background: #667eea;
+    color: white;
+  }
+  
+  .back-button svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  /* No results message */
+  .no-results {
+    padding: 40px 20px;
+    text-align: center;
+    color: #9a7c68;
+  }
+  
+  .no-results svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    opacity: 0.4;
+    color: #C4A882;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .floating-panel {
+      width: calc(100vw - 40px);
+      max-width: 380px;
+    }
+    
+    .logo-left {
+      display: none;
+    }
+    
+    .panel-title {
+      font-size: 20px;
+      padding: 20px 20px 14px;
+    }
+  }
+</style>
+
+<!-- Load Mapbox GL JS from CDN -->
+<link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
+<script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
+
+<!-- Load Mapbox Geocoder Plugin -->
+<link href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css' rel='stylesheet' />
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js'></script>
+
+<!-- Initialize map with locations data -->
+<script define:vars={{ locationsData }}>
+  // Global variables
+  let map = null;
+  let markers = [];
+  let locations = locationsData;
+  let filteredLocations = [...locations];
+  let routeLayer = null;
+  let userLocationMarker = null;
+  
+  // Initialize everything when DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 Initializing redesigned interactive map');
+    console.log('📍 Locations data:', locations);
+    
+    // Initialize map
+    initializeMap();
+    
+    // Render initial locations list
+    renderLocationsList(locations);
+  });
+  
+  // Initialize Mapbox map
+  function initializeMap() {
+    // Wait for Mapbox to load
+    if (typeof mapboxgl === 'undefined') {
+      setTimeout(initializeMap, 100);
+      return;
+    }
+    
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZ2lubGlmIiwiYSI6ImNtZThleGh1azBmOWoya29pd24wOThuMmkifQ.71MH7NWOxxZEeJSqw-vUbg';
+    
+    map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/outdoors-v12', // Outdoor style with terrain features
+      center: [108.0, 14.0],
+      zoom: 11,
+      pitch: 60, // Tilted view for 3D effect
+      bearing: -17.6,
+      antialias: true, // Enable antialiasing for smoother 3D
+      terrain: { source: 'mapbox-dem', exaggeration: 1.5 } // Add terrain elevation
+    });
+    
+    // Add controls
+    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
+    
+    // Initialize Mapbox Geocoder for global search
+    const geocoder = new MapboxGeocoder({
+      accessToken: mapboxgl.accessToken,
+      mapboxgl: mapboxgl,
+      placeholder: 'Tìm kiếm địa chỉ hoặc địa danh...',
+      countries: 'VN',
+      language: 'vi',
+      limit: 6,
+      bbox: [102.144, 8.566, 109.469, 23.393], // Vietnam bounding box
+      proximity: {
+        longitude: 108.0,
+        latitude: 14.0
+      },
+      marker: {
+        color: '#ff6b6b'
+      },
+      flyTo: {
+        zoom: 14,
+        pitch: 60,
+        bearing: 0
+      }
+    });
+    
+    // Add geocoder to map (top-right to avoid overlap with panel)
+    map.addControl(geocoder, 'top-right');
+    
+    // Add markers and 3D buildings when map loads
+    map.on('load', () => {
+      console.log('✅ Map loaded, adding terrain, 3D buildings and markers');
+      
+      // Add terrain source for elevation
+      map.addSource('mapbox-dem', {
+        'type': 'raster-dem',
+        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        'tileSize': 512,
+        'maxzoom': 14
+      });
+      
+      // Set the terrain elevation
+      map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+      
+      // Add sky layer for better 3D effect
+      map.addLayer({
+        'id': 'sky',
+        'type': 'sky',
+        'paint': {
+          'sky-type': 'atmosphere',
+          'sky-atmosphere-sun': [0.0, 90.0],
+          'sky-atmosphere-sun-intensity': 15
+        }
+      });
+      
+      // Add 3D building layer
+      const layers = map.getStyle().layers;
+      const labelLayerId = layers.find(
+        (layer) => layer.type === 'symbol' && layer.layout['text-field']
+      )?.id;
+      
+      if (labelLayerId) {
+        // Add 3D buildings
+        map.addLayer(
+          {
+            'id': '3d-buildings',
+            'source': 'composite',
+            'source-layer': 'building',
+            'filter': ['==', 'extrude', 'true'],
+            'type': 'fill-extrusion',
+            'minzoom': 12,  // Lower minzoom to see buildings earlier
+            'paint': {
+              'fill-extrusion-color': [
+                'interpolate',
+                ['linear'],
+                ['get', 'height'],
+                0, '#dcdcdc',
+                10, '#d0d0d0',
+                20, '#c8c8c8',
+                40, '#b8b8b8',
+                60, '#a8a8a8',
+                100, '#989898'
+              ],
+              'fill-extrusion-height': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                12,
+                0,
+                12.05,
+                ['get', 'height']
+              ],
+              'fill-extrusion-base': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                12,
+                0,
+                12.05,
+                ['get', 'min_height']
+              ],
+              'fill-extrusion-opacity': 0.85
+            }
+          },
+          labelLayerId
+        );
+      }
+      
+      addMarkers();
+    });
+  }
+  
+  // Add markers for all locations
+  function addMarkers() {
+    locations.forEach(location => {
+      // Create custom marker element
+      const el = document.createElement('div');
+      el.className = 'map-marker';
+      el.style.cssText = `
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        border: 3px solid white;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      `;
+      
+      // Create marker - FIXED: No hover events that modify position
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat([location.lng, location.lat])
+        .addTo(map);
+      
+      // Create popup
+      const popup = new mapboxgl.Popup({ offset: 25 })
+        .setHTML(`
+          <div style="padding: 8px;">
+            <h3 style="margin: 0 0 8px 0; color: #1a1a1a; font-size: 18px;">
+              ${location.titleVi || location.title}
+            </h3>
+            <p style="margin: 0 0 8px 0; color: #666; font-size: 14px; line-height: 1.4;">
+              ${location.excerptVi || location.excerpt}
+            </p>
+            <span style="
+              display: inline-block;
+              padding: 4px 8px;
+              background: #f0f0f0;
+              border-radius: 4px;
+              font-size: 12px;
+              color: #666;
+              text-transform: uppercase;
+            ">${location.category}</span>
+          </div>
+        `);
+      
+      marker.setPopup(popup);
+      
+      // Store marker reference
+      markers.push({ marker, location, popup });
+    });
+  }
+  
+  // Render locations list
+  function renderLocationsList(locationsToRender) {
+    const container = document.getElementById('locations-list');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (locationsToRender.length === 0) {
+      container.innerHTML = `
+        <div class="no-results">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
+          </svg>
+          <p style="margin: 0; font-size: 16px; color: #666;">Không tìm thấy địa điểm nào</p>
+        </div>
+      `;
+      return;
+    }
+    
+    locationsToRender.forEach((location, index) => {
+      const item = document.createElement('div');
+      item.className = 'location-item';
+      item.dataset.locationId = location.id;
+      
+      // Build list item content without directions button
+      item.innerHTML = `
+        <div class="location-content">
+          <span class="location-number">${index + 1}</span>
+          <div class="location-info">
+            <div class="location-name">${location.titleVi || location.title}</div>
+            ${location.source ? `<div class="location-source">${location.source}</div>` : ''}
+          </div>
+        </div>
+      `;
+      
+      // Add click handler
+      item.addEventListener('click', () => {
+        // Remove active class from all items
+        document.querySelectorAll('.location-item').forEach(el => {
+          el.classList.remove('active');
+        });
+        
+        // Add active class to clicked item
+        item.classList.add('active');
+        
+        // Fly to location and automatically get directions
+flyToLocation(location);
+        getDirections(location.lat, location.lng);
+      });
+      
+      container.appendChild(item);
+    });
+  }
+  
+  // Fly to location and open popup
+  function flyToLocation(location) {
+    if (!map) return;
+    
+    map.flyTo({
+      center: [location.lng, location.lat],
+      zoom: 14,
+      pitch: 60,
+      bearing: 0,
+      essential: true
+    });
+    
+    // Find and open the corresponding popup
+    const markerData = markers.find(m => m.location.id === location.id);
+    if (markerData) {
+      // Close all other popups
+      markers.forEach(m => m.popup.remove());
+      // Open this popup
+      markerData.popup.addTo(map);
+    }
+  }
+  
+  // Listen for geocoder results and handle them
+  function setupGeocoderListener() {
+    if (typeof MapboxGeocoder === 'undefined' || !map) {
+      setTimeout(setupGeocoderListener, 100);
+      return;
+    }
+    
+    // Find the geocoder control
+    const geocoderControl = document.querySelector('.mapboxgl-ctrl-geocoder');
+    if (geocoderControl) {
+      // Listen for result event on the geocoder input
+      geocoderControl.addEventListener('geocoder.result', (e) => {
+        console.log('Geocoder result:', e.detail);
+        
+        // The marker is automatically added by the geocoder
+        // We can customize the behavior here if needed
+        const result = e.detail.result;
+        
+        // Optionally update the locations list to show the searched location
+        const searchedLocation = {
+          id: result.id,
+          title: result.text || result.place_name.split(',')[0],
+          titleVi: result.text || result.place_name.split(',')[0],
+          excerpt: result.place_name,
+          excerptVi: result.place_name,
+          lat: result.center[1],
+          lng: result.center[0],
+          category: result.place_type[0],
+          source: 'Kết quả tìm kiếm'
+        };
+        
+        // Highlight the searched location in the list
+        renderLocationsList([searchedLocation, ...locations]);
+      });
+    }
+  }
+  
+  // Get directions functionality
+  window.getDirections = function(destLat, destLng) {
+    // Check if geolocation is supported
+    if (!navigator.geolocation) {
+      alert('Trình duyệt của bạn không hỗ trợ định vị');
+      return;
+    }
+    
+    // Request user location
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+        
+        // Add user location marker if not exists
+        if (!userLocationMarker) {
+          const el = document.createElement('div');
+          el.style.cssText = `
+            width: 16px;
+            height: 16px;
+            background: #4285F4;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+          `;
+          
+          userLocationMarker = new mapboxgl.Marker(el)
+            .setLngLat([userLng, userLat])
+            .addTo(map);
+        } else {
+          userLocationMarker.setLngLat([userLng, userLat]);
+        }
+        
+        // Get route from Mapbox Directions API
+        try {
+          const response = await fetch(
+            `https://api.mapbox.com/directions/v5/mapbox/driving/` +
+            `${userLng},${userLat};${destLng},${destLat}?` +
+            `steps=true&geometries=geojson&access_token=${mapboxgl.accessToken}`
+          );
+          
+          const data = await response.json();
+          
+          if (data.routes && data.routes.length > 0) {
+            const route = data.routes[0];
+            
+            // Remove existing route if any
+            if (map.getLayer('route')) {
+              map.removeLayer('route');
+              map.removeSource('route');
+            }
+            
+            // Add route to map
+            map.addSource('route', {
+              type: 'geojson',
+              data: {
+                type: 'Feature',
+                properties: {},
+                geometry: route.geometry
+              }
+            });
+            
+            map.addLayer({
+              id: 'route',
+              type: 'line',
+              source: 'route',
+              layout: {
+                'line-join': 'round',
+                'line-cap': 'round'
+              },
+              paint: {
+                'line-color': '#4285F4',
+                'line-width': 5,
+                'line-opacity': 0.75
+              }
+            });
+            
+            // Fit map to show entire route
+            const bounds = new mapboxgl.LngLatBounds();
+            route.geometry.coordinates.forEach(coord => {
+              bounds.extend(coord);
+            });
+            
+            map.fitBounds(bounds, {
+              padding: { top: 80, bottom: 80, left: 380, right: 80 }
+            });
+            
+            // Show route information
+            const distance = (route.distance / 1000).toFixed(1);
+            const duration = Math.ceil(route.duration / 60);
+            
+            // Create route info popup
+            const routeInfo = document.createElement('div');
+            routeInfo.style.cssText = `
+              position: absolute;
+              top: 20px;
+              right: 20px;
+              background: white;
+              padding: 16px;
+              border-radius: 8px;
+              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+              z-index: 1000;
+              max-width: 200px;
+            `;
+            routeInfo.innerHTML = `
+              <h4 style="margin: 0 0 8px 0; color: #333;">Thông tin lộ trình</h4>
+              <p style="margin: 4px 0; color: #666; font-size: 14px;">📏 Khoảng cách: ${distance} km</p>
+              <p style="margin: 4px 0; color: #666; font-size: 14px;">⏱️ Thời gian: ${duration} phút</p>
+              <button onclick="this.parentElement.remove(); if(map.getLayer('route')) { map.removeLayer('route'); map.removeSource('route'); }" 
+                style="margin-top: 8px; padding: 6px 12px; background: #f0f0f0; border: none; border-radius: 4px; cursor: pointer; width: 100%;">
+                Đóng
+              </button>
+            `;
+            
+            // Remove any existing route info
+            const existingInfo = document.querySelector('.route-info');
+            if (existingInfo) existingInfo.remove();
+            
+            routeInfo.className = 'route-info';
+            document.querySelector('.map-container').appendChild(routeInfo);
+          }
+        } catch (error) {
+          console.error('Error getting directions:', error);
+          alert('Không thể tìm được đường đi. Vui lòng thử lại.');
+        }
+      },
+      (error) => {
+        // Handle location permission denied
+        showLocationPermissionModal();
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    );
+  };
+  
+  // Show location permission modal
+  function showLocationPermissionModal() {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    `;
+    
+    modal.innerHTML = `
+      <div style="
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 400px;
+        margin: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      ">
+        <h3 style="margin: 0 0 16px 0; color: #333;">📍 Cần quyền truy cập vị trí</h3>
+        <p style="margin: 0 0 20px 0; color: #666; line-height: 1.5;">
+          Để chỉ đường từ vị trí của bạn, chúng tôi cần quyền truy cập vị trí. 
+          Vui lòng cho phép truy cập vị trí trong trình duyệt của bạn.
+        </p>
+        <div style="display: flex; gap: 12px;">
+          <button onclick="this.closest('div[style]').parentElement.remove()" style="
+            flex: 1;
+            padding: 10px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+          ">Đóng</button>
+          <button onclick="location.reload()" style="
+            flex: 1;
+            padding: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+          ">Thử lại</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+  }
+</script>

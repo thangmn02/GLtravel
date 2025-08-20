@@ -1,0 +1,637 @@
+---
+// LocationsPanel.astro - Modern glassmorphism locations panel
+// Features: Collapsible, tabbed layout, search, compact cards
+---
+
+<div class="locations-panel-wrapper">
+  <!-- Panel Toggle Button -->
+  <button id="panel-toggle" class="panel-toggle" aria-label="Toggle locations panel">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
+  <!-- Main Panel -->
+  <div id="locations-panel" class="locations-panel expanded">
+    <!-- Header with tabs -->
+    <div class="panel-header">
+      <div class="panel-tabs">
+        <button class="tab-button active" data-tab="list">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M8 6H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 12H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M3 6H3.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M3 12H3.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M3 18H3.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span data-lang="en">List</span>
+          <span data-lang="vi" style="display: none;">Danh sách</span>
+        </button>
+        <button class="tab-button" data-tab="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+            <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <span data-lang="en">Search</span>
+          <span data-lang="vi" style="display: none;">Tìm kiếm</span>
+        </button>
+        <button class="tab-button" data-tab="info">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 16V12" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8H12.01" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <span data-lang="en">Info</span>
+          <span data-lang="vi" style="display: none;">Thông tin</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Panel Content -->
+    <div class="panel-content">
+      <!-- List Tab -->
+      <div class="tab-content active" data-tab-content="list">
+        <div class="locations-counter">
+          <span data-lang="en"><span class="location-count">0</span> Locations</span>
+          <span data-lang="vi" style="display: none;"><span class="location-count">0</span> Địa điểm</span>
+        </div>
+        <div id="locations-list" class="locations-list">
+          <!-- Location cards will be dynamically added here -->
+        </div>
+      </div>
+
+      <!-- Search Tab -->
+      <div class="tab-content" data-tab-content="search">
+        <div class="search-container">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+              <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <input 
+              id="location-search" 
+              type="text" 
+              class="search-input" 
+              placeholder="Search locations..."
+              data-placeholder-en="Search locations..."
+              data-placeholder-vi="Tìm kiếm địa điểm..."
+            />
+            <button id="clear-search" class="clear-search" style="display: none;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2"/>
+                <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div id="search-results" class="search-results">
+          <!-- Search results will appear here -->
+        </div>
+      </div>
+
+      <!-- Info Tab -->
+      <div class="tab-content" data-tab-content="info">
+        <div class="info-content">
+          <h3>
+            <span data-lang="en">📍 Interactive Map</span>
+            <span data-lang="vi" style="display: none;">📍 Bản đồ Tương tác</span>
+          </h3>
+          <p>
+            <span data-lang="en">Explore Gia Lai Province's most beautiful destinations. Click any location to fly there, or get directions from your current position.</span>
+            <span data-lang="vi" style="display: none;">Khám phá những điểm đến đẹp nhất của tỉnh Gia Lai. Nhấp vào bất kỳ địa điểm nào để bay đến đó, hoặc lấy chỉ đường từ vị trí hiện tại của bạn.</span>
+          </p>
+          <div class="map-stats">
+            <div class="stat-item">
+              <div class="stat-number location-count">0</div>
+              <div class="stat-label">
+                <span data-lang="en">Locations</span>
+                <span data-lang="vi" style="display: none;">Địa điểm</span>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number">3D</div>
+              <div class="stat-label">
+                <span data-lang="en">Buildings</span>
+                <span data-lang="vi" style="display: none;">Tòa nhà</span>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number">GPS</div>
+              <div class="stat-label">
+                <span data-lang="en">Navigation</span>
+                <span data-lang="vi" style="display: none;">Điều hướng</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .locations-panel-wrapper {
+    position: fixed; /* Changed from absolute to fixed */
+    top: 80px;
+    left: 20px;
+    z-index: 10000; /* Increased z-index to ensure it's above map */
+    pointer-events: auto; /* Ensure it can receive clicks */
+  }
+
+  /* Panel Toggle Button */
+  .panel-toggle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 48px;
+    height: 48px;
+    background: rgba(102, 126, 234, 0.9); /* More visible background */
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10001;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); /* Add shadow for visibility */
+  }
+
+  .panel-toggle:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+  }
+
+  /* Main Panel */
+  .locations-panel {
+    position: absolute;
+    left: 60px;
+    top: 0;
+    width: 380px;
+    max-height: calc(100vh - 140px);
+    background: rgba(0, 0, 0, 0.9); /* Slightly more opaque */
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(102, 126, 234, 0.5); /* More visible border */
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-450px); /* Start further left */
+    opacity: 0;
+    z-index: 10000; /* Ensure high z-index */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); /* Add shadow */
+  }
+
+  .locations-panel.expanded {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  /* Panel Header */
+  .panel-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .panel-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px;
+    border-radius: 10px;
+  }
+
+  .tab-button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .tab-button:hover {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .tab-button.active {
+    background: rgba(103, 126, 234, 0.6);
+    color: white;
+  }
+
+  /* Panel Content */
+  .panel-content {
+    position: relative;
+    height: calc(100% - 80px);
+    overflow: hidden;
+  }
+
+  .tab-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    overflow-y: auto;
+  }
+
+  .tab-content.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Locations Counter */
+  .locations-counter {
+    padding: 16px 20px 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Locations List */
+  .locations-list {
+    padding: 0 16px 16px;
+  }
+
+  /* Location Card */
+  .location-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .location-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+  
+  .location-icon {
+    font-size: 20px;
+    filter: saturate(0.8);
+  }
+  
+  .location-category {
+    display: flex;
+    gap: 8px;
+    margin: 8px 0 12px;
+  }
+  
+  .category-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  
+  .featured-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.2));
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 4px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 215, 0, 0.9);
+  }
+  
+  .action-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .action-button svg {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .action-button span {
+    white-space: nowrap;
+  }
+  
+  .action-button.view-btn:hover {
+    background: rgba(103, 126, 234, 0.3);
+    border-color: rgba(103, 126, 234, 0.5);
+    color: white;
+  }
+  
+  .action-button.directions-btn:hover {
+    background: rgba(76, 175, 80, 0.3);
+    border-color: rgba(76, 175, 80, 0.5);
+    color: white;
+  }
+
+  .location-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(103, 126, 234, 0.4);
+    transform: translateX(4px);
+  }
+
+  .location-card.active {
+    background: rgba(103, 126, 234, 0.15);
+    border-color: rgba(103, 126, 234, 0.6);
+  }
+
+  .location-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, #667eea, #764ba2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .location-card.active::before,
+  .location-card:hover::before {
+    opacity: 1;
+  }
+
+  .location-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .location-name {
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .location-distance {
+    color: rgba(103, 126, 234, 0.8);
+    font-size: 12px;
+    font-weight: 500;
+    background: rgba(103, 126, 234, 0.1);
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .location-description {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 0 0 12px 0;
+  }
+
+  .location-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* Search Tab */
+  .search-container {
+    padding: 16px 20px;
+  }
+
+  .search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    z-index: 1;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 12px 16px 12px 44px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+  }
+
+  .search-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .search-input:focus {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(103, 126, 234, 0.6);
+  }
+
+  .clear-search {
+    position: absolute;
+    right: 12px;
+    width: 24px;
+    height: 24px;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .clear-search:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .search-results {
+    padding: 8px 16px 16px;
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+  }
+  
+  .search-message {
+    padding: 40px 20px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 14px;
+  }
+  
+  .search-results-header {
+    padding: 12px 4px;
+    margin-bottom: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 13px;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .no-results {
+    padding: 40px 20px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+  }
+  
+  .no-results svg {
+    margin-bottom: 16px;
+  }
+  
+  .no-results p {
+    margin: 16px 0 8px;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  
+  .no-results small {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.3);
+  }
+  
+  .search-result-card {
+    animation: fadeInUp 0.3s ease;
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Info Tab */
+  .info-content {
+    padding: 20px;
+  }
+
+  .info-content h3 {
+    color: white;
+    margin: 0 0 12px 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .info-content p {
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.5;
+    margin: 0 0 20px 0;
+    font-size: 14px;
+  }
+
+  .map-stats {
+    display: flex;
+    gap: 12px;
+  }
+
+  .stat-item {
+    flex: 1;
+    text-align: center;
+    padding: 16px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .stat-number {
+    color: rgba(103, 126, 234, 0.9);
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  /* Custom Scrollbar */
+  .tab-content::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .tab-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .tab-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+  }
+
+  .tab-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .locations-panel-wrapper {
+      left: 10px;
+      top: 70px;
+    }
+
+    .locations-panel {
+      width: 320px;
+    }
+
+    .location-name {
+      font-size: 15px;
+    }
+
+    .location-description {
+      font-size: 13px;
+    }
+  }
+</style>
+
+<script>
+  // LocationsPanel functionality will be handled by the parent component
+  // This component provides the UI structure and styling
+</script>

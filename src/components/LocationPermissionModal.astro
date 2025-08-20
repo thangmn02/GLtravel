@@ -1,0 +1,448 @@
+---
+// LocationPermissionModal.astro - Modal for requesting location permission
+---
+
+<div id="location-permission-modal" class="permission-modal">
+  <div class="modal-backdrop"></div>
+  <div class="modal-container">
+    <button class="modal-close" aria-label="Close">×</button>
+    
+    <div class="modal-header">
+      <div class="modal-icon">📍</div>
+      <h2 class="modal-title">
+        <span data-lang="en">Enable Location Services</span>
+        <span data-lang="vi" style="display: none;">Bật Dịch vụ Định vị</span>
+      </h2>
+    </div>
+    
+    <div class="modal-body">
+      <p class="modal-description">
+        <span data-lang="en">
+          To provide you with the best experience, we need access to your location. This allows us to:
+        </span>
+        <span data-lang="vi" style="display: none;">
+          Để cung cấp trải nghiệm tốt nhất, chúng tôi cần truy cập vị trí của bạn. Điều này cho phép chúng tôi:
+        </span>
+      </p>
+      
+      <ul class="feature-list">
+        <li>
+          <span class="feature-icon">🗺️</span>
+          <span data-lang="en">Show your position on the map</span>
+          <span data-lang="vi" style="display: none;">Hiển thị vị trí của bạn trên bản đồ</span>
+        </li>
+        <li>
+          <span class="feature-icon">📍</span>
+          <span data-lang="en">Calculate distances to attractions</span>
+          <span data-lang="vi" style="display: none;">Tính khoảng cách đến các điểm tham quan</span>
+        </li>
+        <li>
+          <span class="feature-icon">🧭</span>
+          <span data-lang="en">Provide turn-by-turn directions</span>
+          <span data-lang="vi" style="display: none;">Cung cấp chỉ đường chi tiết</span>
+        </li>
+        <li>
+          <span class="feature-icon">⭐</span>
+          <span data-lang="en">Recommend nearby places</span>
+          <span data-lang="vi" style="display: none;">Gợi ý địa điểm gần bạn</span>
+        </li>
+      </ul>
+      
+      <div class="privacy-note">
+        <span class="privacy-icon">🔒</span>
+        <p>
+          <span data-lang="en">
+            Your location data is only used within this browser session and is never stored on our servers.
+          </span>
+          <span data-lang="vi" style="display: none;">
+            Dữ liệu vị trí của bạn chỉ được sử dụng trong phiên trình duyệt này và không bao giờ được lưu trên máy chủ.
+          </span>
+        </p>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-secondary" id="deny-location">
+        <span data-lang="en">Not Now</span>
+        <span data-lang="vi" style="display: none;">Để Sau</span>
+      </button>
+      <button class="btn-primary" id="allow-location">
+        <span data-lang="en">Enable Location</span>
+        <span data-lang="vi" style="display: none;">Bật Định Vị</span>
+      </button>
+    </div>
+    
+    <div class="modal-help">
+      <details>
+        <summary>
+          <span data-lang="en">Having trouble?</span>
+          <span data-lang="vi" style="display: none;">Gặp sự cố?</span>
+        </summary>
+        <div class="help-content">
+          <p>
+            <span data-lang="en">If you're not seeing a location prompt:</span>
+            <span data-lang="vi" style="display: none;">Nếu bạn không thấy yêu cầu vị trí:</span>
+          </p>
+          <ol>
+            <li>
+              <span data-lang="en">Click the lock icon in your browser's address bar</span>
+              <span data-lang="vi" style="display: none;">Nhấp vào biểu tượng khóa trong thanh địa chỉ</span>
+            </li>
+            <li>
+              <span data-lang="en">Find "Location" in the permissions</span>
+              <span data-lang="vi" style="display: none;">Tìm "Vị trí" trong quyền truy cập</span>
+            </li>
+            <li>
+              <span data-lang="en">Change it to "Allow"</span>
+              <span data-lang="vi" style="display: none;">Đổi thành "Cho phép"</span>
+            </li>
+            <li>
+              <span data-lang="en">Refresh the page</span>
+              <span data-lang="vi" style="display: none;">Làm mới trang</span>
+            </li>
+          </ol>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<style>
+  .permission-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+  }
+
+  .permission-modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+  }
+
+  .modal-container {
+    position: relative;
+    background: white;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 1;
+  }
+
+  .modal-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+    transform: scale(1.1);
+  }
+
+  .modal-header {
+    padding: 30px 30px 20px;
+    text-align: center;
+  }
+
+  .modal-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+    animation: bounce 2s infinite;
+  }
+
+  .modal-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+
+  .modal-body {
+    padding: 0 30px 20px;
+  }
+
+  .modal-description {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+  }
+
+  .feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 10px;
+    transition: transform 0.2s ease;
+  }
+
+  .feature-list li:hover {
+    transform: translateX(5px);
+  }
+
+  .feature-icon {
+    font-size: 20px;
+  }
+
+  .privacy-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 15px;
+    background: #e8f5e9;
+    border-radius: 10px;
+    border: 1px solid #4caf50;
+  }
+
+  .privacy-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .privacy-note p {
+    margin: 0;
+    color: #2e7d32;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .modal-footer {
+    padding: 20px 30px 30px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 12px 30px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+
+  .btn-secondary {
+    background: white;
+    color: #666;
+    border: 2px solid #e0e0e0;
+  }
+
+  .btn-secondary:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+  }
+
+  .modal-help {
+    padding: 0 30px 30px;
+  }
+
+  .modal-help details {
+    background: #f5f5f5;
+    border-radius: 10px;
+    padding: 15px;
+  }
+
+  .modal-help summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #666;
+    user-select: none;
+  }
+
+  .modal-help summary:hover {
+    color: #667eea;
+  }
+
+  .help-content {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  .help-content p {
+    margin: 0 0 10px 0;
+    color: #666;
+  }
+
+  .help-content ol {
+    margin: 0;
+    padding-left: 20px;
+    color: #666;
+  }
+
+  .help-content li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @media (max-width: 600px) {
+    .modal-container {
+      width: 95%;
+      margin: 10px;
+    }
+
+    .modal-header {
+      padding: 25px 20px 15px;
+    }
+
+    .modal-body {
+      padding: 0 20px 15px;
+    }
+
+    .modal-footer {
+      padding: 15px 20px 25px;
+      flex-direction: column;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  import { requestLocation, markPermissionAsked } from '../utils/geo';
+
+  export class LocationPermissionModal {
+    private modal: HTMLElement;
+    private allowBtn: HTMLElement;
+    private denyBtn: HTMLElement;
+    private closeBtn: HTMLElement;
+    private onAllow?: () => void;
+    private onDeny?: () => void;
+
+    constructor() {
+      this.modal = document.getElementById('location-permission-modal')!;
+      this.allowBtn = document.getElementById('allow-location')!;
+      this.denyBtn = document.getElementById('deny-location')!;
+      this.closeBtn = this.modal.querySelector('.modal-close')!;
+      
+      this.init();
+    }
+
+    init() {
+      // Handle allow button
+      this.allowBtn.addEventListener('click', async () => {
+        markPermissionAsked();
+        const result = await requestLocation();
+        
+        if (result.success) {
+          this.hide();
+          if (this.onAllow) this.onAllow();
+        } else if (result.errorCode === 'PERMISSION_DENIED') {
+          // Show help section
+          const helpDetails = this.modal.querySelector('details');
+          if (helpDetails) {
+            helpDetails.open = true;
+          }
+        }
+      });
+
+      // Handle deny button
+      this.denyBtn.addEventListener('click', () => {
+        markPermissionAsked();
+        this.hide();
+        if (this.onDeny) this.onDeny();
+      });
+
+      // Handle close button
+      this.closeBtn.addEventListener('click', () => {
+        this.hide();
+      });
+
+      // Handle backdrop click
+      const backdrop = this.modal.querySelector('.modal-backdrop');
+      backdrop?.addEventListener('click', () => {
+        this.hide();
+      });
+
+      // Handle ESC key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && this.modal.classList.contains('show')) {
+          this.hide();
+        }
+      });
+    }
+
+    show(callbacks?: { onAllow?: () => void; onDeny?: () => void }) {
+      this.onAllow = callbacks?.onAllow;
+      this.onDeny = callbacks?.onDeny;
+      this.modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    hide() {
+      this.modal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+  }
+
+  // Export for global use
+  (window as any).LocationPermissionModal = LocationPermissionModal;
+</script>

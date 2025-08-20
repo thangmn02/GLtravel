@@ -1,0 +1,87 @@
+{
+  "$ref": "#/definitions/locations",
+  "definitions": {
+    "locations": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "titleVi": {
+          "type": "string"
+        },
+        "lat": {
+          "type": "number"
+        },
+        "lng": {
+          "type": "number"
+        },
+        "excerpt": {
+          "type": "string"
+        },
+        "excerptVi": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "nature",
+            "culture",
+            "history",
+            "waterfall",
+            "mountain",
+            "religious"
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "image": {
+          "type": "string"
+        },
+        "gallery": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "openingHours": {
+          "type": "string"
+        },
+        "entryFee": {
+          "type": "string"
+        },
+        "bestTime": {
+          "type": "string"
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "featured": {
+          "type": "boolean",
+          "default": false
+        },
+        "$schema": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "titleVi",
+        "lat",
+        "lng",
+        "excerpt",
+        "excerptVi",
+        "category"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
