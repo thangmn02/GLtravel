@@ -2,6 +2,7 @@
 node_modules/
 
 # builds
+.astro/
 .dist/
 dist/
 .netlify/
