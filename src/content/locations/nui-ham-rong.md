@@ -7,7 +7,7 @@ excerpt: "Sacred mountain with dragon-shaped cliffs and panoramic views of Pleik
 excerptVi: "Ngọn núi thiêng với vách đá hình rồng và tầm nhìn toàn cảnh thành phố Pleiku"
 category: "mountain"
 tags: ["mountain", "hiking", "viewpoint", "sunrise", "spiritual"]
-image: "/images/locations/nui-ham-rong.jpg"
+image: "/images/locations-img/nui-ham-rong.webp"
 entryFee: "Free"
 bestTime: "Early morning for sunrise"
 ---

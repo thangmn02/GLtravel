@@ -7,7 +7,7 @@ excerpt: "Pristine national park with rich biodiversity, home to rare species an
 excerptVi: "Vườn quốc gia nguyên sơ với đa dạng sinh học phong phú, nơi sinh sống của nhiều loài quý hiếm"
 category: "nature"
 tags: ["national-park", "trekking", "wildlife", "camping", "eco-tourism"]
-image: "/images/locations/kon-ka-kinh.jpg"
+image: "/images/locations-img/kon-ka-kinh.jpg"
 entryFee: "40,000 VND"
 bestTime: "December to May (dry season)"
 featured: true

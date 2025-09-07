@@ -1,0 +1,24 @@
+[
+  {
+    "name": "Phở Khô Hồng",
+    "address": "22-24 Nguyễn Văn Trỗi, P. Diên Hồng, Pleiku, Gia Lai",
+    "description": "Quán phở khô Gia Lai trứ danh, sợi phở tơi, nước dùng đậm vị; không gian sạch sẽ.",
+    "image": "/images/restaurants/pho-kho-hong.jpg",
+    "coordinates": [108.0023, 13.9839]
+  },
+  {
+    "name": "Bún Cua Cô Lan",
+    "address": "38 Hùng Vương, Pleiku, Gia Lai",
+    "description": "Bún cua cay đậm chất Gia Lai, hương vị địa phương; phục vụ nhanh, giá hợp lý.",
+    "image": "/images/restaurants/bun-cua-co-lan.jpg",
+    "coordinates": [108.0065, 13.9832]
+  },
+  {
+    "name": "Cơm Gà Hải Nam Pleiku",
+    "address": "145 Trường Chinh, Pleiku, Gia Lai",
+    "description": "Cơm gà Hải Nam thơm mềm, phù hợp nhóm gia đình; có chỗ đỗ xe.",
+    "image": "/images/restaurants/com-ga-hai-nam.jpg",
+    "coordinates": [108.0140, 13.9845]
+  }
+]
+

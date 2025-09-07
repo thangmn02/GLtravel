@@ -7,7 +7,7 @@ excerpt: "Vast coffee plantations with white blossoms in season, showcasing Cent
 excerptVi: "Đồn điền cà phê bạt ngàn với hoa trắng mùa nở, tiêu biểu cho nông nghiệp Tây Nguyên"
 category: "culture"
 tags: ["coffee", "plantation", "agriculture", "photography", "agritourism"]
-image: "/images/locations/dong-ca-phe.jpg"
+image: "/images/locations-img/don-dien-ca-phe.jpg"
 entryFee: "Free (guided tours: 50,000 VND)"
 bestTime: "March-April (flowering season)"
 ---

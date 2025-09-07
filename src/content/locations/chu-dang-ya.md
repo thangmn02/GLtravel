@@ -7,7 +7,7 @@ excerpt: "Dormant volcano famous for its golden wildflower meadows and stunning 
 excerptVi: "Núi lửa tắt nổi tiếng với cánh đồng hoa dã quỳ vàng rực và tầm nhìn panorama tuyệt đẹp"
 category: "mountain"
 tags: ["volcano", "wildflowers", "hiking", "photography", "nature"]
-image: "/images/locations/chu-dang-ya.jpg"
+image: "/images/locations-img/chu-dang-ya.jpg"
 entryFee: "20,000 VND"
 bestTime: "November to December (wildflower season)"
 featured: true

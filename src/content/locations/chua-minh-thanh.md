@@ -7,7 +7,7 @@ excerpt: "Famous pagoda in Pleiku with unique Eastern architecture and peaceful 
 excerptVi: "Ngôi chùa nổi tiếng ở Pleiku với kiến trúc Á Đông độc đáo và không gian tâm linh thanh tịnh"
 category: "religious"
 tags: ["temple", "buddhism", "architecture", "spiritual", "culture"]
-image: "/images/locations/chua-minh-thanh.jpg"
+image: "/images/locations-img/chua-minh-thanh-pleiku.jpg"
 openingHours: "6:00 AM - 6:00 PM"
 entryFee: "Free"
 bestTime: "Early morning or late afternoon"

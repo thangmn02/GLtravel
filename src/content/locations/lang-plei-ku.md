@@ -7,7 +7,7 @@ excerpt: "Traditional Jarai ethnic village preserving ancient culture and commun
 excerptVi: "Làng dân tộc Jrai truyền thống lưu giữ văn hóa cổ xưa và nhà rông đặc trưng"
 category: "culture"
 tags: ["ethnic", "culture", "village", "traditional", "jarai"]
-image: "/images/locations/lang-plei-ku.jpg"
+image: "/images/locations-img/lang-pleiku.jpg"
 entryFee: "30,000 VND"
 bestTime: "Festival seasons (March and November)"
 ---

@@ -7,7 +7,7 @@ excerpt: "Majestic waterfall cascading through ancient basalt rocks, creating wh
 excerptVi: "Thác nước hùng vĩ đổ xuống qua những tảng đá bazan cổ, tạo bọt trắng xóa quanh năm"
 category: "waterfall"
 tags: ["waterfall", "nature", "swimming", "picnic", "photography"]
-image: "/images/locations/thac-phu-cuong.jpg"
+image: "/images/locations-img/thac-phu-cuong.jpg"
 entryFee: "10,000 VND"
 bestTime: "September to December (high water season)"
 ---
