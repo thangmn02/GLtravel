@@ -7,7 +7,7 @@ excerpt: "Large artificial lake surrounded by mountains, perfect for water sport
 excerptVi: "Hồ nhân tạo rộng lớn bao quanh bởi núi non, lý tưởng cho thể thao nước và nghỉ dưỡng"
 category: "nature"
 tags: ["lake", "water-sports", "fishing", "resort", "boating"]
-image: "/images/locations/ho-ayun-ha.jpg"
+image: "/images/locations-img/ho-ayun-ha.jpg"
 entryFee: "15,000 VND"
 bestTime: "All year round"
 ---

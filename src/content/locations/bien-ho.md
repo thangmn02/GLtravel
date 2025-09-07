@@ -7,7 +7,7 @@ excerpt: "A stunning volcanic lake formed in an ancient crater, known for its cr
 excerptVi: "Hồ nước trong miệng núi lửa cổ, nổi tiếng với làn nước trong vắt và sương mù huyền ảo buổi sáng"
 category: "nature"
 tags: ["lake", "volcano", "nature", "photography", "camping"]
-image: "/images/locations/bien-ho.jpg"
+image: "/images/locations-img/bien-ho.webp"
 entryFee: "Free"
 bestTime: "October to March"
 featured: true

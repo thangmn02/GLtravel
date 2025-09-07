@@ -56,21 +56,28 @@ a {
   color: inherit;
   text-decoration: none;
 }
-img {
+img:not(.logo) {
   max-width: 100%;
   height: auto;
 }
 
+/* Logo protection - ensure logos maintain their intended size */
+.logo {
+  max-width: none !important;
+  height: auto !important;
+  width: auto !important;
+}
+
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem;
+  width: 100%;
+  margin: 0;
+  padding: 1rem 2rem;
 }
 
 .docs-grid {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 1.5rem;
+  grid-template-columns: 240px 1fr;
+  gap: 2rem;
 }
 
 @media (max-width: 980px) {

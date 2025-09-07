@@ -7,7 +7,7 @@ excerpt: "International border crossing to Cambodia with bustling trade and cult
 excerptVi: "Cửa khẩu quốc tế sang Campuchia với hoạt động thương mại và giao lưu văn hóa sôi động"
 category: "culture"
 tags: ["border", "trade", "cambodia", "international", "market"]
-image: "/images/locations/cua-khau-ia-ly.jpg"
+image: "/images/locations-img/Cua-Khau.jpg"
 openingHours: "7:00 AM - 7:00 PM"
 entryFee: "Free (visa required for crossing)"
 bestTime: "Morning for market activities"

@@ -1,6 +1,8 @@
 ---
 // InteractiveMap.astro - Redesigned with floating side panel
 import { getCollection } from 'astro:content';
+import restaurants from '../data/restaurants.json';
+import hotels from '../data/hotels.json';
 
 // Fetch all locations from content collection
 const locations = await getCollection('locations');
@@ -15,6 +17,7 @@ const locationsData = locations.map(location => ({
   excerpt: location.data.excerpt,
   excerptVi: location.data.excerptVi,
   category: location.data.category,
+  image: location.data.image,
   featured: location.data.featured || false
 }));
 ---
@@ -27,6 +30,27 @@ const locationsData = locations.map(location => ({
   <aside class="floating-panel">
     <h1 class="panel-title">Các địa điểm nổi bật</h1>
     
+    <!-- Locations List Container (Search bar removed - Geocoder will be on the map) -->
+    <div id="locations-list" class="locations-list">
+      <!-- Location items will be dynamically added here -->
+    </div>
+    <!-- Filters -->
+    <div class="filters">
+      <div class="filters-title">Hiển thị</div>
+      <label class="filter-item">
+        <input type="checkbox" id="filter-landmarks" checked />
+        <span>Địa danh</span>
+      </label>
+      <label class="filter-item">
+        <input type="checkbox" id="filter-restaurants" />
+        <span>Ẩm thực</span>
+      </label>
+      <label class="filter-item">
+        <input type="checkbox" id="filter-hotels" />
+        <span>Khách sạn</span>
+      </label>
+    </div>
+
     <!-- Locations List Container (Search bar removed - Geocoder will be on the map) -->
     <div id="locations-list" class="locations-list">
       <!-- Location items will be dynamically added here -->
@@ -50,7 +74,7 @@ const locationsData = locations.map(location => ({
   </a>
 </div>
 
-<style>
+<style is:global>
   @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;500;600&display=swap');
   
   /* Full-screen map container */
@@ -82,11 +106,12 @@ const locationsData = locations.map(location => ({
     backdrop-filter: blur(12px);
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(74, 44, 42, 0.15);
-    z-index: 1000;
+    z-index: 2000; /* Ensure panel stays above map controls and popups */
     display: flex;
     flex-direction: column;
     overflow: hidden;
     border: 1px solid #DCD0B4;
+    pointer-events: auto;
   }
   
   .panel-title {
@@ -141,6 +166,36 @@ const locationsData = locations.map(location => ({
     color: #2d1a19;
   }
   
+  /* Filters */
+  .filters {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px 8px 16px;
+    border-bottom: 1px solid #E8D5C4;
+    background: #FEFBF6;
+  }
+  .filters-title {
+    font-family: 'Merriweather', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #4a2c2a;
+    margin-bottom: 4px;
+  }
+  .filter-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #4a2c2a;
+  }
+  .filter-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #9a382d;
+    cursor: pointer;
+  }
+
   /* Locations List */
   .locations-list {
     flex: 1;
@@ -301,11 +356,19 @@ const locationsData = locations.map(location => ({
     background: #9a7c68;
   }
   
-  /* Logos */
+  /* Logos - PROTECTED FROM ALL IMAGE STYLING */
   .logo {
     position: absolute;
-    height: 250px;  /* Increased to 2.5x (100px * 2.5 = 250px) */
-    z-index: 1001;
+    height: 250px !important;  /* Increased to 2.5x (100px * 2.5 = 250px) */
+    width: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    min-width: unset !important;
+    min-height: unset !important;
+    object-fit: unset !important;
+    border: none !important;
+    margin: 0 !important;
+    z-index: 1500; /* keep below panel but above map */
     /* Removed background, padding, border-radius, and box-shadow for transparency */
   }
   
@@ -334,7 +397,7 @@ const locationsData = locations.map(location => ({
     color: #333;
     font-weight: 600;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    z-index: 1000;
+    z-index: 1400;
     transition: all 0.2s;
   }
   
@@ -380,6 +443,467 @@ const locationsData = locations.map(location => ({
       font-size: 20px;
       padding: 20px 20px 14px;
     }
+    
+    /* Mobile popup adjustments */
+    .mapboxgl-popup {
+      max-width: min(95vw, 420px) !important;
+    }
+    
+    .mapboxgl-popup-content {
+      width: min(95vw, 420px) !important;
+    }
+    
+    /* Route info modal responsive */
+    .route-info {
+      width: calc(100vw - 40px) !important;
+      max-width: none !important;
+      margin: 20px;
+    }
+    
+    /* Location permission modal responsive */
+    .location-permission-modal {
+      margin: 20px !important;
+      width: calc(100vw - 40px) !important;
+      max-width: none !important;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    /* Extra small screens */
+    .floating-panel {
+      top: 60px;
+      left: 10px;
+      width: calc(100vw - 20px);
+      max-height: calc(100vh - 80px);
+    }
+    
+    .mapboxgl-popup {
+      max-width: min(95vw, 380px) !important;
+    }
+    
+    .mapboxgl-popup-content {
+      width: min(95vw, 380px) !important;
+    }
+    
+    .custom-popup-image {
+      max-height: 180px !important;
+      min-height: 140px !important;
+    }
+  }
+  
+  /* Mapbox popup styles - optimized for clarity and positioning */
+  .mapboxgl-popup {
+    z-index: 1200; /* lower than panel but above map */
+    max-width: 680px !important; /* allow wider popups on desktop */
+  }
+  
+  /* Ensure popup doesn't interfere with floating panel */
+  .mapboxgl-popup.mapboxgl-popup-anchor-left {
+    z-index: 1100; /* Lower than panel to avoid conflicts */
+  }
+  
+  /* Enhanced popup boundaries and backdrop */
+  .mapboxgl-popup-tip {
+    border-top-color: rgba(0,0,0,0.08) !important;
+    border-bottom-color: rgba(0,0,0,0.08) !important;
+    border-left-color: rgba(0,0,0,0.08) !important;
+    border-right-color: rgba(0,0,0,0.08) !important;
+  }
+  
+  .mapboxgl-popup-content {
+    padding: 0 !important;
+    width: min(92vw, 640px) !important; /* larger content width */
+    max-width: none !important;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+    border: 1px solid rgba(0,0,0,0.06);
+    background: #fff;
+    backdrop-filter: blur(8px);
+    position: relative;
+  }
+  
+  /* Prevent popup from going off-screen and ensure map interaction */
+  .mapboxgl-popup {
+    max-width: min(92vw, 680px) !important;
+    pointer-events: auto; /* Ensure popup is interactive */
+  }
+  
+  /* Ensure map canvas remains interactive */
+  .mapboxgl-canvas {
+    pointer-events: auto !important;
+  }
+  
+  /* Floating panel should not block map interaction */
+  .floating-panel {
+    pointer-events: auto;
+  }
+  
+  /* Ensure backdrop doesn't interfere with map when not present */
+  .route-backdrop {
+    pointer-events: auto;
+  }
+  
+  /* Small Tooltip Popup Styles - Force Override */
+  .image-tooltip,
+  div.image-tooltip,
+  #image-tooltip {
+    position: absolute !important;
+    width: 180px !important;
+    max-width: 180px !important;
+    background: white !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    overflow: hidden !important;
+    z-index: 2000 !important; /* tooltip above panel */
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease !important;
+    pointer-events: auto !important;
+  }
+  
+  .image-tooltip.active {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .image-tooltip-content {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  .image-tooltip-image,
+  .image-tooltip img,
+  #image-tooltip img {
+    width: 70px !important;
+    max-width: 70px !important;
+    min-width: 70px !important;
+    height: 50px !important;
+    max-height: 50px !important;
+    min-height: 50px !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+    border-radius: 4px !important;
+    margin: 8px auto 0 auto !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .image-tooltip-text {
+    padding: 8px 10px 10px 10px !important;
+    background: white !important;
+    flex: 1 !important;
+  }
+  
+  .image-tooltip-title {
+    margin: 0 0 5px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .image-tooltip-description {
+    margin: 0;
+    font-size: 11px;
+    color: #666;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .image-tooltip-close {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 16px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 10px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+  
+  .image-tooltip-close:hover {
+    background: white;
+    color: #333;
+    transform: scale(1.1);
+  }
+  
+  /* Tooltip arrow */
+  .image-tooltip::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 6px solid transparent;
+  }
+  
+  /* Arrow positioning based on tooltip placement */
+  .image-tooltip.tooltip-bottom::before {
+    top: -12px;
+    left: 15px;
+    border-bottom-color: white;
+    border-top: none;
+  }
+  
+  .image-tooltip.tooltip-top::before {
+    bottom: -12px;
+    left: 15px;
+    border-top-color: white;
+    border-bottom: none;
+  }
+  
+  .image-tooltip.tooltip-left::before {
+    right: -12px;
+    top: 15px;
+    border-left-color: white;
+    border-right: none;
+  }
+  
+  .image-tooltip.tooltip-right::before {
+    left: -12px;
+    top: 15px;
+    border-right-color: white;
+    border-left: none;
+  }
+  
+  /* Ensure sidebar remains visible and functional */
+  .floating-panel {
+    position: absolute;
+  }
+  
+  /* Tooltip positioning helpers */
+  .image-tooltip {
+    z-index: 2000;
+  }
+  
+  /* SPECIFIC TARGETING - Multiple approaches - POPUP IMAGES ONLY */
+  .mapboxgl-popup-content img,
+  .custom-popup-content img,
+  .custom-popup-image,
+  div[class*="popup"] img,
+  div[class*="custom-popup"] img,
+  img[class*="popup"],
+  img[class*="custom-popup-image"],
+  .mapboxgl-popup img,
+  .popup-image-container img,
+  .image-tooltip img,
+  div[id*="tooltip"] img {
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+    border-radius: 4px !important;
+    margin: 0 !important;
+    border: 1px solid #ddd !important;
+  }
+  
+  /* Mobile responsive adjustments for tooltip */
+  @media (max-width: 768px) {
+    .image-tooltip {
+      width: 160px;
+      max-width: calc(100vw - 20px);
+    }
+    
+    .image-tooltip-image {
+      width: 60px !important;
+      max-width: 60px !important;
+      min-width: 60px !important;
+      height: 40px !important;
+      max-height: 40px !important;
+      min-height: 40px !important;
+      margin: 6px auto 0 auto !important;
+    }
+    
+    .image-tooltip-text {
+      padding: 7px 8px 8px 8px;
+    }
+    
+    .image-tooltip-title {
+      font-size: 12px;
+    }
+    
+    .image-tooltip-description {
+      font-size: 10px;
+      -webkit-line-clamp: 3;
+    }
+    
+    .image-tooltip-close {
+      width: 14px;
+      height: 14px;
+      font-size: 9px;
+      top: 3px;
+      right: 3px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .image-tooltip {
+      width: 140px;
+    }
+    
+    .image-tooltip-image {
+      width: 50px !important;
+      max-width: 50px !important;
+      min-width: 50px !important;
+      height: 35px !important;
+      max-height: 35px !important;
+      min-height: 35px !important;
+      margin: 5px auto 0 auto !important;
+    }
+    
+    .image-tooltip-text {
+      padding: 6px 7px 7px 7px;
+    }
+    
+    .image-tooltip-title {
+      font-size: 11px;
+    }
+    
+    .image-tooltip-description {
+      font-size: 9px;
+      -webkit-line-clamp: 3;
+    }
+  }
+  
+  /* OVERRIDE ORIGINAL - Optimized popup images for better visibility */
+  .custom-popup-image {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 260px !important;
+    min-height: 180px !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+    image-rendering: auto !important;
+    background: #f0f0f0 !important;
+    border-radius: 8px 8px 0 0 !important;
+    margin: 0 !important;
+    border: 1px solid #ddd !important;
+  }
+  
+  /* Custom Popup Content container - force small size */
+  .custom-popup-content,
+  div[class*="custom-popup-content"],
+  .mapboxgl-popup-content > div {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    text-align: left !important;
+  }
+  
+  /* Override ANY inline styles or JavaScript dynamic sizing */
+  img[style*="width"],
+  img[style*="height"],
+  div[style*="width"] img,
+  div[style*="height"] img {
+    max-width: 100% !important;
+    height: auto !important;
+    border: 1px solid #ddd !important; /* Normalize inline style overrides */
+  }
+  
+  /* Text content in small popup */
+  .custom-popup-text,
+  .mapboxgl-popup-content .custom-popup-text {
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+  
+  .custom-popup-title,
+  .mapboxgl-popup-content .custom-popup-title {
+    font-size: 12px !important;
+    margin: 2px 0 !important;
+    line-height: 1.2 !important;
+  }
+  
+  .custom-popup-desc,
+  .mapboxgl-popup-content .custom-popup-desc {
+    font-size: 10px !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+  
+  /* Text content */
+  .custom-popup-text {
+    padding: 14px 16px 16px;
+    background: #fff;
+  }
+  
+  .custom-popup-title {
+    margin: 0 0 8px 0;
+    font-family: 'Merriweather', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #2d1a19;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .custom-popup-desc {
+    margin: 0;
+    font-size: 13px;
+    color: #666;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Close button styling */
+  .mapboxgl-popup-close-button {
+    font-size: 16px;
+    padding: 4px;
+    color: #666;
+    border-radius: 0 8px 0 0;
+  }
+  
+  .mapboxgl-popup-close-button:hover {
+    background: rgba(0,0,0,0.05);
+    color: #333;
+  }
+  
+  /* SPECIFIC TARGETING - Only popup images */
+  .custom-popup-image[src],
+  .mapboxgl-popup [src*="images/locations"],
+  .image-tooltip img[src] {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 220px !important;
+    border: 1px solid #ccc !important;
+    object-fit: cover !important;
   }
 </style>
 
@@ -391,15 +915,52 @@ const locationsData = locations.map(location => ({
 <link href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css' rel='stylesheet' />
 <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js'></script>
 
+<!-- FORCE OVERRIDE STYLES - Load after external CSS -->
+<style is:global>
+  /* SPECIFIC POPUP TARGETING - Only target images inside popups */
+  .mapboxgl-popup img,
+  .mapboxgl-popup-content img {
+    max-width: 100% !important;
+    height: auto !important;
+    border: 1px solid #ddd !important;
+    object-fit: cover !important;
+  }
+  
+  .custom-popup-image {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 260px !important;
+    min-height: 180px !important;
+    border: 1px solid #ddd !important;
+    object-fit: cover !important;
+    border-radius: 8px 8px 0 0 !important;
+  }
+  
+  .mapboxgl-popup-content img {
+    max-width: 100% !important;
+    height: auto !important;
+    border: 1px solid #ddd !important;
+    object-fit: cover !important;
+  }
+</style>
+
 <!-- Initialize map with locations data -->
-<script define:vars={{ locationsData }}>
+<script define:vars={{ locationsData, restaurantsData: restaurants, hotelsData: hotels }}>
   // Global variables
   let map = null;
   let markers = [];
+  // Category marker arrays
+  let landmarkMarkers = markers; // alias, keeps compatibility with existing logic
+  let restaurantMarkers = [];
+  let hotelMarkers = [];
+
   let locations = locationsData;
+  let restaurantsList = restaurantsData || [];
+  let hotelsList = hotelsData || [];
   let filteredLocations = [...locations];
   let routeLayer = null;
   let userLocationMarker = null;
+  let currentPopup = null;
   
   // Initialize everything when DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
@@ -411,6 +972,17 @@ const locationsData = locations.map(location => ({
     
     // Render initial locations list
     renderLocationsList(locations);
+    
+    // Add global click handler for any popup images that might be missed
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('custom-popup-image')) {
+        const src = e.target.src;
+        const alt = e.target.alt;
+        if (src && !src.includes('placeholder')) {
+          openImageModal(src, alt, e.target);
+        }
+      }
+    });
   });
   
   // Initialize Mapbox map
@@ -463,6 +1035,49 @@ const locationsData = locations.map(location => ({
     
     // Add geocoder to map (top-right to avoid overlap with panel)
     map.addControl(geocoder, 'top-right');
+
+    // When a user selects a result from the geocoder, immediately draw directions
+    geocoder.on('result', (e) => {
+      try {
+        const [lng, lat] = e.result.center; // Mapbox returns [lng, lat]
+        // Optionally, highlight searched location at the top of the list
+        const result = e.result;
+        const searchedLocation = {
+          id: result.id,
+          title: result.text || (result.place_name ? result.place_name.split(',')[0] : 'Địa điểm'),
+          titleVi: result.text || (result.place_name ? result.place_name.split(',')[0] : 'Địa điểm'),
+          excerpt: result.place_name || '',
+          excerptVi: result.place_name || '',
+          lat,
+          lng,
+          category: (result.place_type && result.place_type[0]) || 'place',
+          source: 'Kết quả tìm kiếm'
+        };
+        if (typeof renderLocationsList === 'function') {
+          renderLocationsList([searchedLocation, ...locations]);
+        }
+        // Trigger route drawing from user's location to the selected destination
+        if (typeof window.getDirections === 'function') {
+          window.getDirections(lat, lng); // our getDirections expects (destLat, destLng)
+        }
+      } catch (err) {
+        console.error('Failed to handle geocoder result:', err);
+      }
+    });
+
+    // Clear any existing route when the geocoder input is cleared
+    geocoder.on('clear', () => {
+      try {
+        if (map.getLayer('route')) map.removeLayer('route');
+        if (map.getSource('route')) map.removeSource('route');
+        const info = document.querySelector('.route-info');
+        const backdrop = document.querySelector('.route-backdrop');
+        if (info) info.remove();
+        if (backdrop) backdrop.remove();
+      } catch (err) {
+        console.warn('Nothing to clear after geocoder clear:', err);
+      }
+    });
     
     // Add markers and 3D buildings when map loads
     map.on('load', () => {
@@ -544,10 +1159,17 @@ const locationsData = locations.map(location => ({
       }
       
       addMarkers();
+
+      // Build markers for Restaurants and Hotels but DO NOT add to map initially
+      buildRestaurantMarkers(restaurantsList);
+      buildHotelMarkers(hotelsList);
+
+      // Initialize filter controls (toggling visibility)
+      setupCategoryFilters();
     });
   }
   
-  // Add markers for all locations
+  // Add markers for Landmarks (địa danh)
   function addMarkers() {
     locations.forEach(location => {
       // Create custom marker element
@@ -568,33 +1190,214 @@ const locationsData = locations.map(location => ({
         .setLngLat([location.lng, location.lat])
         .addTo(map);
       
-      // Create popup
-      const popup = new mapboxgl.Popup({ offset: 25 })
+      // Create popup with smart positioning
+      const imageUrl = location.image || '/images/placeholder-location.svg';
+      const altText = (location.titleVi || location.title || 'Location').replace(/"/g, '&quot;');
+      
+      // Determine popup anchor based on marker position
+      let anchor = 'bottom'; // default
+      
+        // Function to determine best anchor position avoiding floating panel
+      const getSmartAnchor = () => {
+        if (!map) return 'bottom';
+        const point = map.project([location.lng, location.lat]);
+        const mapWidth = map.getContainer().offsetWidth;
+        const mapHeight = map.getContainer().offsetHeight;
+        
+        // Responsive panel width detection
+        const isMobile = mapWidth <= 768;
+        const panelWidth = isMobile ? Math.min(mapWidth - 40, 380) : 400;
+        const isInPanelArea = !isMobile && point.x < panelWidth;
+        
+        // Mobile-first approach
+        if (isMobile) {
+          // On mobile, prefer bottom or top to avoid sides
+          if (point.y < mapHeight * 0.4) {
+            return 'bottom';
+          } else if (point.y > mapHeight * 0.6) {
+            return 'top';
+          }
+          return point.x < mapWidth * 0.5 ? 'right' : 'left';
+        }
+        
+        // Desktop: If marker is behind floating panel, force right anchor
+        if (isInPanelArea) {
+          return 'left'; // Popup appears to right of marker
+        }
+        
+        // If marker is in right third of remaining map area, anchor to left
+        if (point.x > mapWidth * 0.75) {
+          return 'left';
+        }
+        
+        // If marker is in top area, anchor to bottom
+        if (point.y < mapHeight * 0.25) {
+          return 'bottom';
+        }
+        
+        // If marker is in bottom area, anchor to top
+        if (point.y > mapHeight * 0.75) {
+          return 'top';
+        }
+        
+        // Default to right for markers in the clear area
+        return 'right';
+      };
+      
+      const popup = new mapboxgl.Popup({ 
+        offset: {
+          'top': [0, 15],
+          'bottom': [0, -15],
+          'left': [15, 0],
+          'right': [-15, 0],
+          'top-left': [10, 10],
+          'top-right': [-10, 10],
+          'bottom-left': [10, -10],
+          'bottom-right': [-10, -10]
+        },
+        maxWidth: '680px',
+        className: 'custom-mapbox-popup',
+        closeButton: true,
+        closeOnClick: false,
+        anchor: getSmartAnchor() // Set initial anchor
+      })
         .setHTML(`
-          <div style="padding: 8px;">
-            <h3 style="margin: 0 0 8px 0; color: #1a1a1a; font-size: 18px;">
-              ${location.titleVi || location.title}
-            </h3>
-            <p style="margin: 0 0 8px 0; color: #666; font-size: 14px; line-height: 1.4;">
-              ${location.excerptVi || location.excerpt}
-            </p>
-            <span style="
-              display: inline-block;
-              padding: 4px 8px;
-              background: #f0f0f0;
-              border-radius: 4px;
-              font-size: 12px;
-              color: #666;
-              text-transform: uppercase;
-            ">${location.category}</span>
+          <div class="custom-popup-content">
+            <img 
+              class="custom-popup-image" 
+              src="${imageUrl}" 
+              alt="${altText}" 
+              onerror="this.onerror=null;this.src='/images/placeholder-location.svg';" 
+              loading="eager" 
+              decoding="sync"
+              onclick="openImageModal('${imageUrl.replace(/'/g, '\\\'')}', '${altText.replace(/'/g, '\\\'')}', this)" 
+              style="cursor: pointer;"
+              title="Click to view larger image"
+            />
+            <div class="custom-popup-text">
+              <h4 class="custom-popup-title">${location.titleVi || location.title || 'Unnamed Location'}</h4>
+              <p class="custom-popup-desc">${location.excerptVi || location.excerpt || 'No description available'}</p>
+            </div>
           </div>
         `);
+      
+      // When this popup opens, close any previously open popup and adjust anchor
+      popup.on('open', () => {
+        if (currentPopup && currentPopup !== popup) {
+          currentPopup.remove();
+        }
+        const smartAnchor = getSmartAnchor();
+        popup.options.anchor = smartAnchor;
+        currentPopup = popup;
+      });
       
       marker.setPopup(popup);
       
       // Store marker reference
-      markers.push({ marker, location, popup });
+      markers.push({ marker, location, popup }); // landmarkMarkers alias points to markers
     });
+  }
+
+  // Build Restaurant markers (Ẩm thực) without adding to map initially
+  function buildRestaurantMarkers(data) {
+    if (!Array.isArray(data)) return;
+    data.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'map-marker-restaurant';
+      el.style.cssText = `
+        width: 26px;
+        height: 26px;
+        background: #e67e22; /* orange */
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+      `;
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat(item.coordinates);
+      const popup = new mapboxgl.Popup({ offset: 18 })
+        .setHTML(`
+          <div class="custom-popup-content">
+            <img class="custom-popup-image" src="${item.image}" alt="${(item.name || 'Restaurant').replace(/"/g,'&quot;')}" onerror="this.onerror=null;this.src='/images/placeholder-location.svg';" />
+            <div class="custom-popup-text">
+              <h4 class="custom-popup-title">${item.name}</h4>
+              <p class="custom-popup-desc">${item.description || ''}</p>
+              <p class="custom-popup-desc" style="margin-top:6px;color:#888;">${item.address || ''}</p>
+            </div>
+          </div>
+        `);
+      marker.setPopup(popup);
+      restaurantMarkers.push(marker);
+    });
+  }
+
+  // Build Hotel markers (Khách sạn) without adding to map initially
+  function buildHotelMarkers(data) {
+    if (!Array.isArray(data)) return;
+    data.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'map-marker-hotel';
+      el.style.cssText = `
+        width: 26px;
+        height: 26px;
+        background: #27ae60; /* green */
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+      `;
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat(item.coordinates);
+      const popup = new mapboxgl.Popup({ offset: 18 })
+        .setHTML(`
+          <div class="custom-popup-content">
+            <img class="custom-popup-image" src="${item.image}" alt="${(item.name || 'Hotel').replace(/"/g,'&quot;')}" onerror="this.onerror=null;this.src='/images/placeholder-location.svg';" />
+            <div class="custom-popup-text">
+              <h4 class="custom-popup-title">${item.name}</h4>
+              <p class="custom-popup-desc">${item.description || ''}</p>
+              <p class="custom-popup-desc" style="margin-top:6px;color:#888;">${item.address || ''}</p>
+            </div>
+          </div>
+        `);
+      marker.setPopup(popup);
+      hotelMarkers.push(marker);
+    });
+  }
+
+  // Toggle helpers
+  function setMarkersVisibility(list, visible) {
+    if (!list) return;
+    list.forEach(entry => {
+      const mk = entry?.marker || entry; // support landmark objects and raw markers
+      if (!mk) return;
+      if (visible) mk.addTo(map); else mk.remove();
+    });
+  }
+
+  // Setup filter checkbox listeners
+  function setupCategoryFilters() {
+    const cbLandmarks = document.getElementById('filter-landmarks');
+    const cbRestaurants = document.getElementById('filter-restaurants');
+    const cbHotels = document.getElementById('filter-hotels');
+
+    if (cbLandmarks) {
+      cbLandmarks.addEventListener('change', (e) => {
+        setMarkersVisibility(landmarkMarkers, e.target.checked);
+      });
+    }
+    if (cbRestaurants) {
+      cbRestaurants.addEventListener('change', (e) => {
+        setMarkersVisibility(restaurantMarkers, e.target.checked);
+      });
+    }
+    if (cbHotels) {
+      cbHotels.addEventListener('change', (e) => {
+        setMarkersVisibility(hotelMarkers, e.target.checked);
+      });
+    }
+
+    // Initial state: show landmarks, hide others
+    setMarkersVisibility(landmarkMarkers, true);
+    setMarkersVisibility(restaurantMarkers, false);
+    setMarkersVisibility(hotelMarkers, false);
   }
   
   // Render locations list
@@ -668,49 +1471,17 @@ flyToLocation(location);
     // Find and open the corresponding popup
     const markerData = markers.find(m => m.location.id === location.id);
     if (markerData) {
-      // Close all other popups
-      markers.forEach(m => m.popup.remove());
-      // Open this popup
+      // Close currently open popup, then open this one
+      if (currentPopup && currentPopup !== markerData.popup) {
+        currentPopup.remove();
+      }
       markerData.popup.addTo(map);
+      currentPopup = markerData.popup;
     }
   }
   
-  // Listen for geocoder results and handle them
-  function setupGeocoderListener() {
-    if (typeof MapboxGeocoder === 'undefined' || !map) {
-      setTimeout(setupGeocoderListener, 100);
-      return;
-    }
-    
-    // Find the geocoder control
-    const geocoderControl = document.querySelector('.mapboxgl-ctrl-geocoder');
-    if (geocoderControl) {
-      // Listen for result event on the geocoder input
-      geocoderControl.addEventListener('geocoder.result', (e) => {
-        console.log('Geocoder result:', e.detail);
-        
-        // The marker is automatically added by the geocoder
-        // We can customize the behavior here if needed
-        const result = e.detail.result;
-        
-        // Optionally update the locations list to show the searched location
-        const searchedLocation = {
-          id: result.id,
-          title: result.text || result.place_name.split(',')[0],
-          titleVi: result.text || result.place_name.split(',')[0],
-          excerpt: result.place_name,
-          excerptVi: result.place_name,
-          lat: result.center[1],
-          lng: result.center[0],
-          category: result.place_type[0],
-          source: 'Kết quả tìm kiếm'
-        };
-        
-        // Highlight the searched location in the list
-        renderLocationsList([searchedLocation, ...locations]);
-      });
-    }
-  }
+  // Legacy DOM-based Geocoder listener removed.
+  // We now listen directly on the geocoder instance via geocoder.on('result') inside initializeMap().
   
   // Get directions functionality
   window.getDirections = function(destLat, destLng) {
@@ -803,35 +1574,84 @@ flyToLocation(location);
             const distance = (route.distance / 1000).toFixed(1);
             const duration = Math.ceil(route.duration / 60);
             
-            // Create route info popup
+            // Create route info popup - properly centered modal
             const routeInfo = document.createElement('div');
             routeInfo.style.cssText = `
-              position: absolute;
-              top: 20px;
-              right: 20px;
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
               background: white;
-              padding: 16px;
-              border-radius: 8px;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-              z-index: 1000;
-              max-width: 200px;
+              padding: 20px;
+              border-radius: 12px;
+              box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+              z-index: 10000;
+              max-width: 300px;
+              width: 90%;
+              border: 1px solid rgba(0,0,0,0.1);
             `;
             routeInfo.innerHTML = `
-              <h4 style="margin: 0 0 8px 0; color: #333;">Thông tin lộ trình</h4>
-              <p style="margin: 4px 0; color: #666; font-size: 14px;">📏 Khoảng cách: ${distance} km</p>
-              <p style="margin: 4px 0; color: #666; font-size: 14px;">⏱️ Thời gian: ${duration} phút</p>
-              <button onclick="this.parentElement.remove(); if(map.getLayer('route')) { map.removeLayer('route'); map.removeSource('route'); }" 
-                style="margin-top: 8px; padding: 6px 12px; background: #f0f0f0; border: none; border-radius: 4px; cursor: pointer; width: 100%;">
-                Đóng
-              </button>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h4 style="margin: 0; color: #333; font-size: 18px;">Thông tin lộ trình</h4>
+                <button class="route-info-close" 
+                  style="background: none; border: none; font-size: 20px; cursor: pointer; color: #666; padding: 0; width: 24px; height: 24px;">
+                  ✕
+                </button>
+              </div>
+              <p style="margin: 8px 0; color: #666; font-size: 15px; display: flex; align-items: center; gap: 8px;">📏 Khoảng cách: <strong>${distance} km</strong></p>
+              <p style="margin: 8px 0; color: #666; font-size: 15px; display: flex; align-items: center; gap: 8px;">⏱️ Thời gian: <strong>${duration} phút</strong></p>
             `;
+            
+            // Add modal backdrop
+            const backdrop = document.createElement('div');
+            backdrop.style.cssText = `
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: rgba(0, 0, 0, 0.5);
+              z-index: 9999;
+              backdrop-filter: blur(2px);
+            `;
+            
+            // Close on backdrop click - ensure map interactivity
+            backdrop.addEventListener('click', (e) => {
+              if (e.target === backdrop) { // Only close if clicking backdrop, not modal
+                backdrop.remove();
+                routeInfo.remove();
+                // Re-enable map interaction
+                if (map) {
+                  map.getCanvas().style.pointerEvents = 'auto';
+                }
+              }
+            });
+            
+            // Prevent modal content clicks from closing modal
+            routeInfo.addEventListener('click', (e) => {
+              e.stopPropagation();
+            });
+
+            // Close button just hides modal (keeps the route on map)
+            const closeBtn = routeInfo.querySelector('.route-info-close');
+            if (closeBtn) {
+              closeBtn.addEventListener('click', () => {
+                const backdropEl = document.querySelector('.route-backdrop');
+                if (backdropEl) backdropEl.remove();
+                if (routeInfo && routeInfo.parentNode) routeInfo.remove();
+              });
+            }
             
             // Remove any existing route info
             const existingInfo = document.querySelector('.route-info');
+            const existingBackdrop = document.querySelector('.route-backdrop');
             if (existingInfo) existingInfo.remove();
+            if (existingBackdrop) existingBackdrop.remove();
             
             routeInfo.className = 'route-info';
-            document.querySelector('.map-container').appendChild(routeInfo);
+            backdrop.className = 'route-backdrop';
+            document.body.appendChild(backdrop);
+            document.body.appendChild(routeInfo);
           }
         } catch (error) {
           console.error('Error getting directions:', error);
@@ -853,17 +1673,19 @@ flyToLocation(location);
   // Show location permission modal
   function showLocationPermissionModal() {
     const modal = document.createElement('div');
+    modal.className = 'location-permission-modal';
     modal.style.cssText = `
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.6);
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 9999;
+      z-index: 15000;
+      backdrop-filter: blur(4px);
     `;
     
     modal.innerHTML = `
@@ -906,11 +1728,184 @@ flyToLocation(location);
     
     document.body.appendChild(modal);
     
-    // Close modal when clicking outside
+    // Close modal when clicking outside - maintain map interactivity
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
         modal.remove();
+        // Ensure map remains interactive
+        if (map) {
+          map.getCanvas().style.pointerEvents = 'auto';
+        }
       }
     });
+    
+    // Prevent modal content clicks from closing modal
+    const modalContent = modal.querySelector('div[style*="background: white"]');
+    if (modalContent) {
+      modalContent.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    }
   }
+  
+  // Image Tooltip Functionality
+  let currentImageTooltip = null;
+  
+  // Function to open image tooltip near marker
+  window.openImageModal = function(imageSrc, imageAlt, markerElement) {
+    // Close any existing tooltip
+    if (currentImageTooltip) {
+      closeImageTooltip();
+    }
+    
+    // Find the marker position if not provided
+    let clickEvent = window.event || event;
+    let targetElement = markerElement || clickEvent?.target;
+    
+    // Create tooltip HTML
+    const tooltipHTML = `
+      <div class="image-tooltip small-thumbnail-popup" id="image-tooltip">
+        <div class="image-tooltip-content">
+          <button class="image-tooltip-close" type="button">
+            ✕
+          </button>
+          <img 
+            class="image-tooltip-image" 
+            src="${imageSrc}" 
+            alt="${imageAlt}" 
+            onerror="this.onerror=null;this.src='/images/placeholder-location.svg';"
+          />
+          <div class="image-tooltip-text">
+            <h4 class="image-tooltip-title">${imageAlt || 'Location Image'}</h4>
+            <p class="image-tooltip-description">Click to view location details</p>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Add tooltip to map container
+    const mapContainer = document.querySelector('.map-container');
+    if (mapContainer) {
+      mapContainer.insertAdjacentHTML('beforeend', tooltipHTML);
+      currentImageTooltip = document.getElementById('image-tooltip');
+      
+      // Position tooltip near the click/marker
+      positionTooltip(currentImageTooltip, clickEvent);
+      
+      // Show tooltip with animation
+      setTimeout(() => {
+        if (currentImageTooltip) {
+          currentImageTooltip.classList.add('active');
+        }
+      }, 10);
+      
+      // Add event listeners
+      const closeButton = currentImageTooltip.querySelector('.image-tooltip-close');
+      if (closeButton) {
+        closeButton.addEventListener('click', closeImageTooltip);
+      }
+      
+      // Close on ESC key
+      document.addEventListener('keydown', handleTooltipEscapeKey);
+      
+      // Close when clicking outside tooltip
+      document.addEventListener('click', handleOutsideClick, true);
+    }
+  };
+  
+  // Position tooltip near marker/click point
+  function positionTooltip(tooltip, clickEvent) {
+    if (!tooltip || !clickEvent) return;
+    
+    const mapContainer = document.querySelector('.map-container');
+    if (!mapContainer) return;
+    
+    const containerRect = mapContainer.getBoundingClientRect();
+    const tooltipWidth = 220;
+    const tooltipHeight = 140; // Approximate height with larger image
+    const offset = 15;
+    
+    let x, y;
+    
+    if (clickEvent.clientX && clickEvent.clientY) {
+      // Position relative to click coordinates
+      x = clickEvent.clientX - containerRect.left;
+      y = clickEvent.clientY - containerRect.top;
+    } else {
+      // Fallback to center-ish position
+      x = containerRect.width / 2;
+      y = containerRect.height / 2;
+    }
+    
+    // Determine best position to avoid viewport edges
+    let positionClass = 'tooltip-bottom';
+    let finalX = x;
+    let finalY = y + offset;
+    
+    // Check if tooltip would go off right edge
+    if (x + tooltipWidth > containerRect.width - 20) {
+      finalX = x - tooltipWidth - offset;
+      positionClass = 'tooltip-left';
+    }
+    
+    // Check if tooltip would go off bottom edge  
+    if (y + tooltipHeight > containerRect.height - 20) {
+      finalY = y - tooltipHeight - offset;
+      positionClass = positionClass.includes('left') ? 'tooltip-left' : 'tooltip-top';
+    }
+    
+    // Check if tooltip would go off left edge
+    if (finalX < 20) {
+      finalX = x + offset;
+      positionClass = y + tooltipHeight > containerRect.height - 20 ? 'tooltip-top' : 'tooltip-bottom';
+    }
+    
+    // Check if tooltip would go off top edge
+    if (finalY < 20) {
+      finalY = y + offset;
+      positionClass = finalX > containerRect.width / 2 ? 'tooltip-left' : 'tooltip-right';
+    }
+    
+    // Apply positioning
+    tooltip.style.left = `${Math.max(10, Math.min(finalX, containerRect.width - tooltipWidth - 10))}px`;
+    tooltip.style.top = `${Math.max(10, Math.min(finalY, containerRect.height - tooltipHeight - 10))}px`;
+    tooltip.classList.add(positionClass);
+  }
+  
+  // Function to close image tooltip
+  window.closeImageTooltip = function() {
+    if (!currentImageTooltip) return;
+    
+    // Hide tooltip with animation
+    currentImageTooltip.classList.remove('active');
+    
+    // Remove after animation
+    setTimeout(() => {
+      if (currentImageTooltip && currentImageTooltip.parentNode) {
+        currentImageTooltip.parentNode.removeChild(currentImageTooltip);
+        currentImageTooltip = null;
+      }
+      
+      // Remove event listeners
+      document.removeEventListener('keydown', handleTooltipEscapeKey);
+      document.removeEventListener('click', handleOutsideClick, true);
+    }, 200);
+  };
+  
+  // Handle ESC key for tooltip
+  function handleTooltipEscapeKey(e) {
+    if (e.key === 'Escape') {
+      closeImageTooltip();
+    }
+  }
+  
+  // Handle clicks outside tooltip
+  function handleOutsideClick(e) {
+    if (currentImageTooltip && !currentImageTooltip.contains(e.target) && !e.target.classList.contains('custom-popup-image')) {
+      closeImageTooltip();
+    }
+  }
+  
+  // Legacy function name support
+  window.closeImageModal = window.closeImageTooltip;
 </script>

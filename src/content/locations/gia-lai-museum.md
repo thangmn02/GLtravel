@@ -8,7 +8,7 @@ lat: 13.9776
 lng: 107.9965
 category: "culture"
 featured: true
-image: "/images/locations/gia-lai-museum.jpg"
+image: "/images/locations-img/bao-tang-gia-lai.jpg"
 images: 
   - "/images/locations/gia-lai-museum-1.jpg"
   - "/images/locations/gia-lai-museum-2.jpg"
