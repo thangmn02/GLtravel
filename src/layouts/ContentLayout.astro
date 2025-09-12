@@ -1,7 +1,6 @@
 ---
 import '../styles/global.css';
 import Header from '../components/Header.astro';
-import Sidebar from '../components/Sidebar.astro';
 import Footer from '../components/Footer.astro';
 import site from '../data/site';
 
@@ -21,6 +20,13 @@ const {
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.svg" />
     <title>{title}</title>
+
+    <!-- Manrope for content pages (consistent with new design) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet" />
+
+    <!-- Keep language toggle script for EN/VI switching -->
     <script is:inline>
       (function() {
         const KEY = 'preferred-lang';
@@ -32,7 +38,6 @@ const {
           html.setAttribute('lang', lang === 'vi' ? 'vi' : 'en');
           localStorage.setItem(KEY, lang);
         }
-        // infer from saved or IP. If no saved preference, try IP geolocation; fallback to locale/timezone
         let initial = saved;
         function decideByEnv() {
           const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
@@ -69,34 +74,41 @@ const {
         });
       })();
     </script>
-    <script is:inline>
-      (function() {
-        const ASK_KEY = 'geo-permission-asked';
-        if (localStorage.getItem(ASK_KEY)) return;
-        function request() {
-          if (!('geolocation' in navigator)) return;
-          navigator.geolocation.getCurrentPosition(function(pos){
-            localStorage.setItem('user-location', JSON.stringify({
-              lon: pos.coords.longitude,
-              lat: pos.coords.latitude,
-              ts: Date.now()
-            }));
-            localStorage.setItem(ASK_KEY, '1');
-          }, function(){ localStorage.setItem(ASK_KEY, '1'); }, { enableHighAccuracy: true, timeout: 8000 });
-        }
-        window.addEventListener('load', request, { once: true });
-      })();
-    </script>
+
+    <style>
+      body[data-page="content"] {
+        font-family: 'Manrope', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        color: #111;
+        background: #faf7f2; /* same soft light theme */
+      }
+      .content-shell {
+        padding: 96px 16px 48px;
+      }
+      .prose {
+        max-width: 80ch;
+        margin: 0 auto;
+        background: rgba(255,255,255,0.8);
+        border: 1px solid rgba(0,0,0,0.06);
+        border-radius: 16px;
+        padding: 28px 22px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+      }
+      .prose h1 { font-weight: 800; line-height: 1.2; margin: 0 0 0.75rem; }
+      .prose h2 { font-weight: 700; margin: 2rem 0 0.75rem; }
+      .prose p { color: #333; }
+      .prose ul { color: #444; }
+
+      /* Full-bleed utility: let child sections span the viewport width */
+      .full-bleed { width: 100vw; margin-left: 50%; transform: translateX(-50%); }
+      @media (max-width: 768px) { .full-bleed { width: auto; margin-left: 0; transform: none; } }
+    </style>
   </head>
-<body>
+  <body data-page="content">
     <Header />
-    <main class="container">
-      <div class="docs-grid">
-        <Sidebar />
-        <article class="content">
-          <slot />
-        </article>
-      </div>
+    <main class="content-shell">
+      <article class="prose">
+        <slot />
+      </article>
     </main>
     <Footer />
   </body>

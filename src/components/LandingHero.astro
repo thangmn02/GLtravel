@@ -1,0 +1,25 @@
+---
+import LandingLayout from '../layouts/LandingLayout.astro';
+---
+<section class="landing-hero" aria-label="Aurora Hero" data-animate>
+  <div class="bg">
+    <div class="g1"></div>
+    <div class="g2"></div>
+  </div>
+  <div class="content">
+    <slot name="title" />
+    <slot name="subtitle" />
+    <slot name="actions" />
+  </div>
+</section>
+
+<style>
+  .landing-hero { position: relative; padding: 96px 16px 24px; overflow: hidden; max-width: 1200px; margin: 0 auto; }
+  .landing-hero .bg { position: absolute; inset: -10% -10% -10% -10%; z-index: 1; filter: blur(48px) saturate(120%); }
+  .landing-hero .bg .g1, .landing-hero .bg .g2 { position: absolute; inset: 0; background: radial-gradient(60% 60% at 30% 30%, rgba(255, 233, 160, 0.7), rgba(255,233,160,0) 60%), radial-gradient(50% 50% at 70% 70%, rgba(170, 210, 255, 0.6), rgba(170,210,255,0) 60%); animation: a1 26s linear infinite; opacity: .75; }
+  .landing-hero .bg .g2 { background: radial-gradient(60% 60% at 60% 40%, rgba(255, 210, 150, 0.5), rgba(255,210,150,0) 60%), radial-gradient(50% 50% at 20% 70%, rgba(170, 220, 255, 0.45), rgba(170,220,255,0) 60%); animation: a2 34s linear infinite; opacity: .7; }
+  .landing-hero .content { position: relative; z-index: 2; text-align: center; }
+  @keyframes a1 { 0%{ transform: translateX(0) translateY(0)} 50%{ transform: translateX(-2%) translateY(1%)} 100%{ transform: translateX(0) translateY(0)} }
+  @keyframes a2 { 0%{ transform: translateX(0) translateY(0)} 50%{ transform: translateX(1%) translateY(-2%)} 100%{ transform: translateX(0) translateY(0)} }
+  @media (prefers-reduced-motion: reduce) { .landing-hero .bg .g1, .landing-hero .bg .g2 { animation: none; } }
+</style>

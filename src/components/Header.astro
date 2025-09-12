@@ -3,7 +3,7 @@ import site from '../data/site';
 const { nav, titleEn, titleVi } = site;
 const { pathname } = Astro.url;
 ---
-<header class="header container">
+<header class="header container" data-home-header>
   <a href="/" class="brand" aria-label={`${titleEn} / ${titleVi}`}>
     <span class="dot" />
     <span data-lang="en">{titleEn}</span>

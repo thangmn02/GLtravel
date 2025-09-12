@@ -1,0 +1,142 @@
+---
+const cards = [
+  {
+    href: '/map',
+    titleEn: 'Interactive Map',
+    titleVi: 'Bản đồ Tương tác',
+    descEn: '3D view, GPS, and rich details of Gia Lai.',
+    descVi: 'Góc nhìn 3D, GPS và thông tin phong phú về Gia Lai.',
+    size: 'lg',
+    icon: 'map'
+  },
+  {
+    href: '/coffee-journey',
+    titleEn: 'Coffee Journey',
+    titleVi: 'Hành trình Cà phê',
+    descEn: 'From basalt soil to aromatic cups.',
+    descVi: 'Từ đất bazan đến những tách cà phê thơm lừng.',
+    size: 'wide',
+    icon: 'coffee'
+  },
+  {
+    href: '/culture',
+    titleEn: 'Gong Culture',
+    titleVi: 'Văn hóa Cồng chiêng',
+    descEn: 'UNESCO heritage of the Highlands.',
+    descVi: 'Di sản UNESCO của Tây Nguyên.',
+    size: 'square',
+    icon: 'gong'
+  },
+  {
+    href: '/food',
+    titleEn: 'Signature Cuisine',
+    titleVi: 'Ẩm thực Đặc sắc',
+    descEn: 'Authentic flavors of Gia Lai.',
+    descVi: 'Hương vị bản địa đậm đà.',
+    size: 'square',
+    icon: 'food'
+  }
+];
+---
+<section class="bento" aria-label="Key site sections" data-animate>
+  <div class="grid">
+    {cards.map((c) => (
+      <a class={['card', c.size].join(' ')} href={c.href} aria-label={`${c.titleEn} / ${c.titleVi}`}>
+        <div class="icon" aria-hidden="true" role="img">
+          {c.icon === 'map' && (
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2V6z"/><path d="M9 4v14M15 6v14"/></svg>
+          )}
+          {c.icon === 'coffee' && (
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 8h14a4 4 0 0 1 0 8H10a7 7 0 0 1-7-7V8z"/><path d="M17 12h2a2 2 0 1 0 0-4h-2"/><path d="M6 20h10"/></svg>
+          )}
+          {c.icon === 'gong' && (
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/><path d="M5 5l2-2m10 0l2 2"/></svg>
+          )}
+          {c.icon === 'food' && (
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 3v8a4 4 0 0 0 8 0V3"/><path d="M12 7h8v5a4 4 0 0 1-4 4h-4"/></svg>
+          )}
+        </div>
+        <div class="txt">
+          <h3>
+            <span data-lang="en">{c.titleEn}</span>
+            <span data-lang="vi">{c.titleVi}</span>
+          </h3>
+          <p>
+            <span data-lang="en">{c.descEn}</span>
+            <span data-lang="vi">{c.descVi}</span>
+          </p>
+        </div>
+      </a>
+    ))}
+  </div>
+</section>
+
+<style>
+  .bento { padding: 36px 16px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-auto-rows: 120px;
+    gap: 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 16px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.75);
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+    overflow: hidden;
+    color: #111;
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .card::before {
+    content: '';
+    position: absolute; inset: -20% -20% auto auto; width: 60%; height: 60%;
+    background: radial-gradient( circle at 30% 30%, rgba(255, 225, 140, 0.5), rgba(255, 225, 140, 0) 60% ),
+                radial-gradient( circle at 70% 70%, rgba(160, 205, 255, 0.35), rgba(160, 205, 255, 0) 60% );
+    filter: blur(20px);
+    pointer-events: none;
+  }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 14px 40px rgba(0,0,0,0.10); }
+  .card:focus-visible { outline: 3px solid #111; outline-offset: 2px; }
+  .card .icon { color: #6b7280; position: absolute; top: 14px; left: 14px; }
+  .card .txt h3 { margin: 0 0 6px; font-weight: 800; font-size: 1.1rem; }
+  .card .txt p { margin: 0; color: #444; font-size: .95rem; }
+
+  /* sizes: lg 2x2, wide 2x1, square 1x1 */
+  .card.lg { grid-column: span 4; grid-row: span 4; }
+  .card.wide { grid-column: span 4; grid-row: span 2; }
+  .card.square { grid-column: span 2; grid-row: span 2; }
+
+  @media (max-width: 1024px) {
+    .grid { grid-template-columns: repeat(4, 1fr); }
+    .card.lg { grid-column: span 4; grid-row: span 4; }
+    .card.wide { grid-column: span 4; grid-row: span 2; }
+    .card.square { grid-column: span 2; grid-row: span 2; }
+  }
+  @media (max-width: 640px) {
+    .grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 140px; }
+    .card.lg { grid-column: span 2; grid-row: span 3; }
+    .card.wide { grid-column: span 2; grid-row: span 2; }
+    .card.square { grid-column: span 1; grid-row: span 1; }
+  }
+
+  /* Hover glowing border using outline gradient */
+  .card { --glow: radial-gradient( circle at 50% 50%, rgba(255,186,73,0.7), rgba(255,186,73,0) 60% ),
+                 radial-gradient( circle at 70% 30%, rgba(158,203,255,0.7), rgba(158,203,255,0) 60% ); }
+  .card::after {
+    content: '';
+    position: absolute; inset: 0; border-radius: 16px; padding: 1px;
+    background: linear-gradient( to bottom right, rgba(255,186,73,0.6), rgba(158,203,255,0.6) );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    opacity: 0; transition: opacity .25s ease;
+  }
+  .card:hover::after { opacity: 1; }
+</style>
