@@ -1,0 +1,30 @@
+---
+import ContentLayout from '../layouts/ContentLayout.astro';
+import site from '../data/site';
+import StorySection from '../components/StorySection.astro';
+---
+<ContentLayout title={`Coffee Journey — ${site.titleEn}`} description="Follow Gia Lai's coffee from basalt soil to the cup.">
+  <h1>
+    <span data-lang="vi">Hành trình Cà phê</span>
+    <span data-lang="en">Coffee Journey</span>
+  </h1>
+  <p>
+    <span data-lang="vi">Từ đất bazan đến những tách cà phê thơm lừng.</span>
+    <span data-lang="en">From basalt soil to aromatic cups.</span>
+  </p>
+
+  <!-- Horizontal scroll story section -->
+  <StorySection />
+
+  <!-- Placeholder for cafes list/map -->
+  <section style="margin-top: 2rem;">
+    <h2>
+      <span data-lang="vi">Các quán cà phê không thể bỏ lỡ</span>
+      <span data-lang="en">Must-visit Cafes</span>
+    </h2>
+    <p>
+      <span data-lang="vi">Khu vực đang chờ nội dung. Sẽ hiển thị danh sách hoặc bản đồ các quán cà phê nổi bật.</span>
+      <span data-lang="en">Placeholder area for a list or map of notable cafes.</span>
+    </p>
+  </section>
+</ContentLayout>

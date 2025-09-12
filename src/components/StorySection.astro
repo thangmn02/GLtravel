@@ -1,0 +1,169 @@
+---
+// StorySection.astro — horizontally scrolling story with GSAP ScrollTrigger
+// Desktop/Tablet: vertical scroll drives horizontal panels. Mobile: stacks vertically.
+---
+<section class="story" aria-label="Coffee Journey Story">
+  <div class="pin">
+    <div class="track">
+      <article class="panel" style="background-image: url('/images/story/placeholder-1.jpg');">
+        <div class="overlay"></div>
+        <div class="content">
+          <h2 data-lang="vi">Chương 1: Đất Bazan Màu Mỡ</h2>
+          <h2 data-lang="en">Chapter 1: The Fertile Bazan Soil</h2>
+          <p data-lang="vi">Nhờ lớp đất đỏ bazan giàu dinh dưỡng, cây cà phê bén rễ và phát triển bền bỉ qua năm tháng.</p>
+          <p data-lang="en">Rich red basalt soil anchors the roots and nurtures coffee trees for decades.</p>
+        </div>
+      </article>
+      <article class="panel" style="background-image: url('/images/story/placeholder-2.jpg');">
+        <div class="overlay"></div>
+        <div class="content">
+          <h2 data-lang="vi">Chương 2: Những Nông Trại Bạt Ngàn</h2>
+          <h2 data-lang="en">Chapter 2: The Vast Plantations</h2>
+          <p data-lang="vi">Nắng gió Tây Nguyên và kỹ thuật canh tác tạo nên những mùa quả chín trĩu.</p>
+          <p data-lang="en">Highland winds and careful cultivation yield abundant harvests.</p>
+        </div>
+      </article>
+      <article class="panel" style="background-image: url('/images/story/placeholder-3.jpg');">
+        <div class="overlay"></div>
+        <div class="content">
+          <h2 data-lang="vi">Nghệ thuật Rang Xay</h2>
+          <h2 data-lang="en">The Art of Roasting</h2>
+          <p data-lang="vi">Từng mẻ rang mở khoá tầng hương, từ hạt đến hồn.</p>
+          <p data-lang="en">Each roast unlocks layers of aroma—grain to soul.</p>
+        </div>
+      </article>
+      <article class="panel" style="background-image: url('/images/story/placeholder-4.jpg');">
+        <div class="overlay"></div>
+        <div class="content">
+          <h2 data-lang="vi">Hương vị trong Tách Cà phê</h2>
+          <h2 data-lang="en">The Flavor in the Cup</h2>
+          <p data-lang="vi">Tách cà phê đậm đà, kết tinh từ đất, trời, và con người Gia Lai.</p>
+          <p data-lang="en">A cup that reflects land, climate, and the people of Gia Lai.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <style>
+    /* Wrapper must create scroll space equal to number of panels */
+    .story { position: relative; height: calc(100vh * 4); }
+
+    /* Pinned viewport area */
+    .pin { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+
+    /* Horizontal track that slides left as the page scrolls */
+    .track { display: flex; height: 100vh; width: calc(100vw * 4); will-change: transform; }
+
+    /* Panels occupy full viewport each */
+    .panel { flex: 0 0 100vw; height: 100vh; position: relative; background-size: cover; background-position: center; }
+    .panel .overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0.75)); }
+    .panel .content { position: absolute; inset: auto 8% 10% 8%; background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.06); border-radius: 16px; padding: 18px 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); max-width: 70ch; }
+    .panel h2 { margin: 0 0 .35rem; font-weight: 800; color: #111; }
+    .panel p { margin: 0; color: #333; }
+
+    /* Mobile: disable horizontal effect and stack */
+    @media (max-width: 768px) {
+      .story { height: auto; }
+      .pin { position: relative; height: auto; }
+      .track { display: block; width: auto; height: auto; }
+      .panel { height: min(60vh, 540px); }
+    }
+  </style>
+
+  <script is:inline>
+    (function() {
+      const MOBILE_MAX = 768;
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function init(gsap) {
+        if (window.matchMedia(`(max-width: ${MOBILE_MAX}px)`).matches || prefersReduced) {
+          return; // Stacked layout; no JS needed
+        }
+
+        const scriptEl = document.currentScript;
+        const story = scriptEl && scriptEl.closest('.story') || document.querySelector('.story');
+        if (!story) return;
+        const pin = story.querySelector('.pin');
+        const track = story.querySelector('.track');
+        const panels = Array.from(story.querySelectorAll('.panel'));
+        if (!pin || !track || panels.length === 0) return;
+
+        // Ensure the wrapper height and track width reflect the number of panels
+        function setDims() {
+          const count = panels.length;
+          story.style.height = (count * 100) + 'vh';
+          track.style.width = (count * window.innerWidth) + 'px';
+        }
+        setDims();
+
+        // Register plugin if available via namespace
+        const ScrollTrigger = gsap.ScrollTrigger || window.ScrollTrigger;
+        if (ScrollTrigger && gsap.registerPlugin) gsap.registerPlugin(ScrollTrigger);
+
+        // Compute total horizontal distance based on actual track width
+        const total = () => track.scrollWidth || track.offsetWidth || (panels.length * window.innerWidth);
+        const maxX = () => -(total() - window.innerWidth);
+
+        gsap.to(track, {
+          x: () => maxX(),
+          ease: 'none',
+          scrollTrigger: {
+            trigger: story,
+            start: 'top top',
+            end: '+=3000',
+            scrub: 0.8,
+            invalidateOnRefresh: true
+          }
+        });
+
+        // Subtle per-panel opacity polish
+        panels.forEach((panel, i) => {
+          gsap.fromTo(panel, { opacity: 0.95 }, {
+            opacity: 1,
+            scrollTrigger: {
+              trigger: story,
+              start: () => 'top top+=' + (i * window.innerWidth),
+              end: () => 'top top+=' + ((i + 1) * window.innerWidth),
+              scrub: true
+            }
+          });
+        });
+
+        window.addEventListener('resize', () => {
+          setDims();
+          if (gsap.ScrollTrigger) gsap.ScrollTrigger.refresh();
+        });
+      }
+
+      function loadAndInit() {
+        // If GSAP already present (bundled or CDN), use it
+        if (window.gsap && (window.ScrollTrigger || (window.gsap && window.gsap.ScrollTrigger))) {
+          const lib = window.gsap;
+          if (window.ScrollTrigger && lib.registerPlugin) lib.registerPlugin(window.ScrollTrigger);
+          init(lib);
+          return;
+        }
+        // Load via CDN as a fallback
+        const s1 = document.createElement('script');
+        s1.src = 'https://unpkg.com/gsap@3/dist/gsap.min.js';
+        s1.defer = true;
+        s1.onload = () => {
+          const s2 = document.createElement('script');
+          s2.src = 'https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js';
+          s2.defer = true;
+          s2.onload = () => {
+            if (window.gsap && window.ScrollTrigger) {
+              window.gsap.registerPlugin(window.ScrollTrigger);
+              init(window.gsap);
+            }
+          };
+          document.head.appendChild(s2);
+        };
+        document.head.appendChild(s1);
+      }
+
+      if (document.readyState !== 'loading') loadAndInit();
+      else document.addEventListener('DOMContentLoaded', loadAndInit);
+    })();
+  </script>
+</section>

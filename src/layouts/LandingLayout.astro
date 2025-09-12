@@ -1,0 +1,165 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import site from '../data/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+const {
+  title = site.titleEn,
+  description = site.descriptionEn,
+} = Astro.props;
+---
+<html lang="en" class="lang-en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" />
+    <title>{title}</title>
+
+    <!-- Manrope for homepage only -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet" />
+
+    <!-- Language toggle (copied from default layout for consistency) -->
+    <script is:inline>
+      (function() {
+        const KEY = 'preferred-lang';
+        const html = document.documentElement;
+        const saved = localStorage.getItem(KEY);
+        function setLang(lang) {
+          html.classList.remove('lang-en','lang-vi');
+          html.classList.add(lang === 'vi' ? 'lang-vi' : 'lang-en');
+          html.setAttribute('lang', lang === 'vi' ? 'vi' : 'en');
+          localStorage.setItem(KEY, lang);
+        }
+        let initial = saved;
+        function decideByEnv() {
+          const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+          const locale = navigator.language || '';
+          if (locale.toLowerCase().startsWith('vi') || tz.includes('Ho_Chi_Minh') || tz.includes('Bangkok')) {
+            return 'vi';
+          }
+          return 'en';
+        }
+        if (!initial) {
+          try {
+            fetch('https://ipapi.co/country/', { cache: 'no-store' })
+              .then(r => r.ok ? r.text() : Promise.reject())
+              .then(code => {
+                const lang = (code || '').trim().toUpperCase() === 'VN' ? 'vi' : 'en';
+                setLang(lang);
+              })
+              .catch(() => setLang(decideByEnv()));
+          } catch (e) {
+            setLang(decideByEnv());
+          }
+        } else {
+          setLang(initial);
+        }
+        window.__setLang = setLang;
+        document.addEventListener('DOMContentLoaded', () => {
+          const btn = document.getElementById('lang-toggle');
+          if (btn) {
+            btn.addEventListener('click', () => {
+              const next = html.classList.contains('lang-vi') ? 'en' : 'vi';
+              setLang(next);
+            });
+          }
+        });
+      })();
+    </script>
+
+    <!-- Micro-interactions: IntersectionObserver + dynamic header -->
+    <script is:inline>
+      (function() {
+        function onReady(fn){ if (document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+        onReady(function(){
+          document.body.dataset.page = 'home';
+
+          // IntersectionObserver for fade/slide-in
+          const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          const els = document.querySelectorAll('[data-animate]');
+          if (!prefersReduced && 'IntersectionObserver' in window) {
+            const obs = new IntersectionObserver((entries) => {
+              for (const e of entries) {
+                if (e.isIntersecting) {
+                  e.target.classList.add('in-view');
+                  obs.unobserve(e.target);
+                }
+              }
+            }, { rootMargin: '0px 0px -10% 0px', threshold: 0.1 });
+            els.forEach(el => obs.observe(el));
+          } else {
+            els.forEach(el => el.classList.add('in-view'));
+          }
+
+          // Header transparency -> solid on scroll
+          const header = document.querySelector('.header');
+          if (header) {
+            const apply = () => {
+              const y = window.scrollY || window.pageYOffset;
+              if (y > 64) header.classList.add('solid'); else header.classList.remove('solid');
+            };
+            apply();
+            window.addEventListener('scroll', apply, { passive: true });
+          }
+        });
+      })();
+    </script>
+
+    <style>
+      /* Homepage-only base type + spacing */
+      body[data-page="home"] {
+        font-family: 'Manrope', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        color: #111;
+        background: #faf7f2; /* soft, sophisticated light */
+      }
+      main.landing-main {
+        padding-top: 88px; /* offset for fixed header */
+      }
+
+      /* Header overrides for the landing page */
+      body[data-page="home"] .header {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        width: 100%;
+        margin: 0;
+        background: transparent !important;
+        border: none;
+        box-shadow: none;
+        backdrop-filter: none;
+        z-index: 100;
+      }
+      body[data-page="home"] .header.solid {
+        background: rgba(255,255,255,0.85) !important;
+        border-bottom: 1px solid rgba(0,0,0,0.06);
+        box-shadow: 0 6px 24px rgba(0,0,0,0.06);
+        backdrop-filter: saturate(160%) blur(12px);
+      }
+      body[data-page="home"] .header .nav a { color: #1a1a1a; }
+      body[data-page="home"] .header .nav a:hover,
+      body[data-page="home"] .header .nav a.active { color: #111; background: rgba(0,0,0,0.04); }
+
+      /* Animate-in helpers */
+      [data-animate] { opacity: 0; transform: translateY(16px); transition: opacity .6s cubic-bezier(.22,1,.36,1), transform .6s cubic-bezier(.22,1,.36,1); }
+      .in-view { opacity: 1; transform: translateY(0); }
+
+      @media (prefers-reduced-motion: reduce) {
+        [data-animate] { transition: none; opacity: 1; transform: none; }
+      }
+    </style>
+  </head>
+  <body data-page="home">
+    <Header />
+    <main class="landing-main">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

@@ -52,6 +52,12 @@ body {
   line-height: 1.65;
 }
 
+/* Homepage header polish without affecting other pages */
+body[data-page="home"] .brand .dot {
+  box-shadow: 0 0 18px rgba(255, 199, 94, 0.6);
+  background: linear-gradient(135deg, #ffd777, #a7d3ff);
+}
+
 a {
   color: inherit;
   text-decoration: none;
