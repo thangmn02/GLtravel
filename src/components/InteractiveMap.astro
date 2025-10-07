@@ -1,8 +1,7 @@
 ---
-// InteractiveMap.astro - Redesigned with floating side panel
+// InteractiveMap.astro - Google Maps implementation
+// Enhanced with location markers, InfoWindows, and staggered animation
 import { getCollection } from 'astro:content';
-import restaurants from '../data/restaurants.json';
-import hotels from '../data/hotels.json';
 
 // Fetch all locations from content collection
 const locations = await getCollection('locations');
@@ -26,43 +25,20 @@ const locationsData = locations.map(location => ({
   <!-- Map canvas - fills entire viewport -->
   <div id="map"></div>
   
-  <!-- New Floating Side Panel -->
-  <aside class="floating-panel">
-    <h1 class="panel-title">Các địa điểm nổi bật</h1>
-    
-    <!-- Locations List Container (Search bar removed - Geocoder will be on the map) -->
-    <div id="locations-list" class="locations-list">
-      <!-- Location items will be dynamically added here -->
-    </div>
-    <!-- Filters -->
-    <div class="filters">
-      <div class="filters-title">Hiển thị</div>
-      <label class="filter-item">
-        <input type="checkbox" id="filter-landmarks" checked />
-        <span>Địa danh</span>
-      </label>
-      <label class="filter-item">
-        <input type="checkbox" id="filter-restaurants" />
-        <span>Ẩm thực</span>
-      </label>
-      <label class="filter-item">
-        <input type="checkbox" id="filter-hotels" />
-        <span>Khách sạn</span>
-      </label>
-    </div>
-
-    <!-- Locations List Container (Search bar removed - Geocoder will be on the map) -->
-    <div id="locations-list" class="locations-list">
-      <!-- Location items will be dynamically added here -->
-    </div>
-  </aside>
-  
-  <!-- Logo Top Left -->
+  <!-- Logo overlay -->
   <img 
     src="/images/logo/logo gl 1.png" 
     alt="Gia Lai Logo" 
-    class="logo logo-left"
+    class="map-logo"
     onerror="this.src='/images/placeholder-logo.svg'"
+  />
+  
+  <!-- Places Search Box -->
+  <input 
+    id="pac-input" 
+    type="text" 
+    placeholder="Tìm kiếm địa điểm / Search places..."
+    class="search-input"
   />
   
   <!-- Back to Home button -->
@@ -75,8 +51,6 @@ const locationsData = locations.map(location => ({
 </div>
 
 <style is:global>
-  @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;500;600&display=swap');
-  
   /* Full-screen map container */
   .map-container {
     position: relative;
@@ -93,293 +67,6 @@ const locationsData = locations.map(location => ({
     left: 0;
     width: 100%;
     height: 100%;
-  }
-  
-  /* Floating Side Panel - Central Highlands Theme */
-  .floating-panel {
-    position: absolute;
-    top: 80px;  /* Moved down to avoid any potential overlap */
-    left: 20px;
-    width: 360px;
-    max-height: calc(100vh - 120px);  /* Adjusted max height */
-    background: #FAF3E0;
-    backdrop-filter: blur(12px);
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(74, 44, 42, 0.15);
-    z-index: 2000; /* Ensure panel stays above map controls and popups */
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid #DCD0B4;
-    pointer-events: auto;
-  }
-  
-  .panel-title {
-    margin: 0;
-    padding: 20px 24px;
-    font-family: 'Merriweather', serif;
-    font-size: 20px;
-    font-weight: 700;
-    color: #4a2c2a;
-    border-bottom: 1px solid #E8D5C4;
-    background: linear-gradient(to bottom, #FEFBF6, #FAF3E0);
-    letter-spacing: -0.02em;
-  }
-  
-  /* Custom styles for Mapbox Geocoder */
-  .mapboxgl-ctrl-geocoder {
-    max-width: 400px;
-    width: 100%;
-    border: 1px solid #DCD0B4;
-    box-shadow: 0 4px 16px rgba(74, 44, 42, 0.12);
-    font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    margin-right: 60px;  /* Add margin to keep it away from navigation controls */
-  }
-  
-  .mapboxgl-ctrl-geocoder--input {
-    font-family: 'Open Sans', sans-serif;
-    color: #4a2c2a;
-    padding: 10px 45px;
-    height: 44px;
-  }
-  
-  .mapboxgl-ctrl-geocoder--input:focus {
-    color: #4a2c2a;
-    outline: 2px solid #9a7c68;
-    outline-offset: -2px;
-  }
-  
-  .mapboxgl-ctrl-geocoder .suggestions {
-    font-family: 'Open Sans', sans-serif;
-    border: 1px solid #DCD0B4;
-    box-shadow: 0 4px 16px rgba(74, 44, 42, 0.12);
-  }
-  
-  .mapboxgl-ctrl-geocoder .suggestions > li > a {
-    padding: 8px 10px;
-    color: #4a2c2a;
-  }
-  
-  .mapboxgl-ctrl-geocoder .suggestions > .active > a,
-  .mapboxgl-ctrl-geocoder .suggestions > li > a:hover {
-    background-color: #F2EADC;
-    color: #2d1a19;
-  }
-  
-  /* Filters */
-  .filters {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 12px 16px 8px 16px;
-    border-bottom: 1px solid #E8D5C4;
-    background: #FEFBF6;
-  }
-  .filters-title {
-    font-family: 'Merriweather', serif;
-    font-size: 14px;
-    font-weight: 700;
-    color: #4a2c2a;
-    margin-bottom: 4px;
-  }
-  .filter-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    color: #4a2c2a;
-  }
-  .filter-item input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: #9a382d;
-    cursor: pointer;
-  }
-
-  /* Locations List */
-  .locations-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px 8px 8px 8px;
-    background: transparent;
-  }
-  
-  /* Location Item - Central Highlands Theme */
-  .location-item {
-    padding: 16px;
-    margin: 0 8px 8px 8px;
-    background: transparent;
-    border-radius: 0;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    position: relative;
-    border: 1px solid transparent;  /* Default transparent border to prevent layout shift */
-    border-bottom: 1px solid #E8D5C4;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-  
-  .location-item:last-child {
-    border-bottom: none;
-  }
-  
-  /* Hover effects */
-  .location-item:hover {
-    background: #F2EADC;
-    /* removed padding shift */
-    border: 1px solid #9a382d;  /* Add reddish-brown border on hover */
-    border-bottom: 1px solid #9a382d;  /* Ensure bottom border is also colored */
-  }
-  
-  .location-item.active {
-    background: #F2EADC;
-  }
-  
-  .location-item.active::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 3px;
-    height: 70%;
-    background: #9a382d;
-    border-radius: 0 2px 2px 0;
-  }
-  
-  .location-number {
-    display: inline-block;
-    min-width: 24px;
-    font-family: 'Merriweather', serif;
-    font-size: 14px;
-    font-weight: 400;
-    color: #9a7c68;
-    margin-right: 12px;
-    flex-shrink: 0;
-    line-height: 1.6;
-  }
-  
-  .location-item.active .location-number {
-    color: #9a382d;
-    font-weight: 700;
-  }
-  
-  .location-content {
-    display: flex;
-    align-items: flex-start;
-    flex: 1;
-  }
-  
-  .location-info {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    gap: 4px;
-  }
-  
-  .location-source {
-    font-size: 11px;
-    color: #9a7c68;
-    margin-top: 2px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 500;
-  }
-  
-  .directions-link {
-    padding: 0;
-    background: transparent;
-    color: #9a382d;
-    border: none;
-    border-radius: 0;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    text-decoration: none;
-    margin-top: 4px;
-  }
-  
-  .directions-link:hover {
-    color: #c74a3f;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-  
-  .directions-link svg {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
-  }
-  
-  .location-name {
-    font-family: 'Merriweather', serif;
-    font-size: 15px;
-    font-weight: 600;
-    color: #4a2c2a;
-    line-height: 1.5;
-    letter-spacing: -0.01em;
-    margin-bottom: 2px;
-  }
-  
-  .location-item:hover .location-name {
-    color: #2d1a19;
-  }
-  
-  .location-item.active .location-name {
-    color: #9a382d;
-    font-weight: 700;
-  }
-  
-  /* Custom Scrollbar - Earthy Theme */
-  .locations-list::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  .locations-list::-webkit-scrollbar-track {
-    background: #F5EFE3;
-    border-radius: 3px;
-  }
-  
-  .locations-list::-webkit-scrollbar-thumb {
-    background: #C4A882;
-    border-radius: 3px;
-  }
-  
-  .locations-list::-webkit-scrollbar-thumb:hover {
-    background: #9a7c68;
-  }
-  
-  /* Logos - PROTECTED FROM ALL IMAGE STYLING */
-  .logo {
-    position: absolute;
-    height: 250px !important;  /* Increased to 2.5x (100px * 2.5 = 250px) */
-    width: auto !important;
-    max-width: none !important;
-    max-height: none !important;
-    min-width: unset !important;
-    min-height: unset !important;
-    object-fit: unset !important;
-    border: none !important;
-    margin: 0 !important;
-    z-index: 1500; /* keep below panel but above map */
-    /* Removed background, padding, border-radius, and box-shadow for transparency */
-  }
-  
-  .logo-left {
-    top: 20px;
-    left: 400px;  /* Adjusted slightly since panel moved down */
-  }
-  
-  .logo-right {
-    top: 20px;
-    right: 20px;
   }
   
   /* Back Button */
@@ -413,1499 +100,626 @@ const locationsData = locations.map(location => ({
     height: 20px;
   }
   
-  /* No results message */
-  .no-results {
-    padding: 40px 20px;
-    text-align: center;
-    color: #9a7c68;
-  }
-  
-  .no-results svg {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 16px;
-    opacity: 0.4;
-    color: #C4A882;
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .floating-panel {
-      width: calc(100vw - 40px);
-      max-width: 380px;
-    }
-    
-    .logo-left {
-      display: none;
-    }
-    
-    .panel-title {
-      font-size: 20px;
-      padding: 20px 20px 14px;
-    }
-    
-    /* Mobile popup adjustments */
-    .mapboxgl-popup {
-      max-width: min(95vw, 420px) !important;
-    }
-    
-    .mapboxgl-popup-content {
-      width: min(95vw, 420px) !important;
-    }
-    
-    /* Route info modal responsive */
-    .route-info {
-      width: calc(100vw - 40px) !important;
-      max-width: none !important;
-      margin: 20px;
-    }
-    
-    /* Location permission modal responsive */
-    .location-permission-modal {
-      margin: 20px !important;
-      width: calc(100vw - 40px) !important;
-      max-width: none !important;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    /* Extra small screens */
-    .floating-panel {
-      top: 60px;
-      left: 10px;
-      width: calc(100vw - 20px);
-      max-height: calc(100vh - 80px);
-    }
-    
-    .mapboxgl-popup {
-      max-width: min(95vw, 380px) !important;
-    }
-    
-    .mapboxgl-popup-content {
-      width: min(95vw, 380px) !important;
-    }
-    
-    .custom-popup-image {
-      max-height: 180px !important;
-      min-height: 140px !important;
-    }
-  }
-  
-  /* Mapbox popup styles - optimized for clarity and positioning */
-  .mapboxgl-popup {
-    z-index: 1200; /* lower than panel but above map */
-    max-width: 680px !important; /* allow wider popups on desktop */
-  }
-  
-  /* Ensure popup doesn't interfere with floating panel */
-  .mapboxgl-popup.mapboxgl-popup-anchor-left {
-    z-index: 1100; /* Lower than panel to avoid conflicts */
-  }
-  
-  /* Enhanced popup boundaries and backdrop */
-  .mapboxgl-popup-tip {
-    border-top-color: rgba(0,0,0,0.08) !important;
-    border-bottom-color: rgba(0,0,0,0.08) !important;
-    border-left-color: rgba(0,0,0,0.08) !important;
-    border-right-color: rgba(0,0,0,0.08) !important;
-  }
-  
-  .mapboxgl-popup-content {
-    padding: 0 !important;
-    width: min(92vw, 640px) !important; /* larger content width */
-    max-width: none !important;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
-    border: 1px solid rgba(0,0,0,0.06);
-    background: #fff;
-    backdrop-filter: blur(8px);
-    position: relative;
-  }
-  
-  /* Prevent popup from going off-screen and ensure map interaction */
-  .mapboxgl-popup {
-    max-width: min(92vw, 680px) !important;
-    pointer-events: auto; /* Ensure popup is interactive */
-  }
-  
-  /* Ensure map canvas remains interactive */
-  .mapboxgl-canvas {
-    pointer-events: auto !important;
-  }
-  
-  /* Floating panel should not block map interaction */
-  .floating-panel {
-    pointer-events: auto;
-  }
-  
-  /* Ensure backdrop doesn't interfere with map when not present */
-  .route-backdrop {
-    pointer-events: auto;
-  }
-  
-  /* Small Tooltip Popup Styles - Force Override */
-  .image-tooltip,
-  div.image-tooltip,
-  #image-tooltip {
-    position: absolute !important;
-    width: 180px !important;
-    max-width: 180px !important;
-    background: white !important;
-    border-radius: 6px !important;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-    border: 1px solid rgba(0, 0, 0, 0.1) !important;
-    overflow: hidden !important;
-    z-index: 2000 !important; /* tooltip above panel */
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.2s ease !important;
-    pointer-events: auto !important;
-  }
-  
-  .image-tooltip.active {
-    opacity: 1;
-    visibility: visible;
-  }
-  
-  .image-tooltip-content {
-    position: relative !important;
-    display: flex !important;
-    flex-direction: column !important;
-  }
-  
-  .image-tooltip-image,
-  .image-tooltip img,
-  #image-tooltip img {
-    width: 70px !important;
-    max-width: 70px !important;
-    min-width: 70px !important;
-    height: 50px !important;
-    max-height: 50px !important;
-    min-height: 50px !important;
-    object-fit: cover !important;
-    object-position: center !important;
-    display: block !important;
-    border-radius: 4px !important;
-    margin: 8px auto 0 auto !important;
-    flex-shrink: 0 !important;
-  }
-  
-  .image-tooltip-text {
-    padding: 8px 10px 10px 10px !important;
-    background: white !important;
-    flex: 1 !important;
-  }
-  
-  .image-tooltip-title {
-    margin: 0 0 5px 0;
-    font-size: 13px;
-    font-weight: 600;
-    color: #333;
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
-  .image-tooltip-description {
-    margin: 0;
-    font-size: 11px;
-    color: #666;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
-  .image-tooltip-close {
+  /* Logo overlay */
+  .map-logo {
     position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 16px;
-    height: 16px;
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #666;
-    font-size: 10px;
-    font-weight: bold;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    top: 20px;
+    left: 20px;
+    width: 120px;
+    height: auto;
+    z-index: 10;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    transition: opacity 0.3s ease;
   }
   
-  .image-tooltip-close:hover {
+  .map-logo:hover {
+    opacity: 0.9;
+  }
+  
+  /* Places Search Box */
+  .search-input {
+    position: absolute;
+    top: 20px;
+    right: 60px;
+    width: 320px;
+    padding: 12px 16px;
+    font-size: 15px;
+    font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
     background: white;
-    color: #333;
-    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    outline: none;
+    transition: all 0.3s ease;
   }
   
-  /* Tooltip arrow */
-  .image-tooltip::before {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 0;
-    border: 6px solid transparent;
+  .search-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
   }
   
-  /* Arrow positioning based on tooltip placement */
-  .image-tooltip.tooltip-bottom::before {
-    top: -12px;
-    left: 15px;
-    border-bottom-color: white;
-    border-top: none;
+  .search-input::placeholder {
+    color: #999;
   }
   
-  .image-tooltip.tooltip-top::before {
-    bottom: -12px;
-    left: 15px;
-    border-top-color: white;
-    border-bottom: none;
+  /* Custom InfoWindow styling */
+  .custom-infowindow {
+    padding: 0;
+    max-width: 320px;
+    font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
   
-  .image-tooltip.tooltip-left::before {
-    right: -12px;
-    top: 15px;
-    border-left-color: white;
-    border-right: none;
+  .custom-infowindow-image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 8px 8px 0 0;
+    display: block;
   }
   
-  .image-tooltip.tooltip-right::before {
-    left: -12px;
-    top: 15px;
-    border-right-color: white;
-    border-left: none;
+  .custom-infowindow-content {
+    padding: 15px;
+    background: white;
+    border-radius: 0 0 8px 8px;
   }
   
-  /* Ensure sidebar remains visible and functional */
-  .floating-panel {
-    position: absolute;
-  }
-  
-  /* Tooltip positioning helpers */
-  .image-tooltip {
-    z-index: 2000;
-  }
-  
-  /* SPECIFIC TARGETING - Multiple approaches - POPUP IMAGES ONLY */
-  .mapboxgl-popup-content img,
-  .custom-popup-content img,
-  .custom-popup-image,
-  div[class*="popup"] img,
-  div[class*="custom-popup"] img,
-  img[class*="popup"],
-  img[class*="custom-popup-image"],
-  .mapboxgl-popup img,
-  .popup-image-container img,
-  .image-tooltip img,
-  div[id*="tooltip"] img {
-    max-width: 100% !important;
-    height: auto !important;
-    object-fit: cover !important;
-    object-position: center !important;
-    display: block !important;
-    border-radius: 4px !important;
-    margin: 0 !important;
-    border: 1px solid #ddd !important;
-  }
-  
-  /* Mobile responsive adjustments for tooltip */
-  @media (max-width: 768px) {
-    .image-tooltip {
-      width: 160px;
-      max-width: calc(100vw - 20px);
-    }
-    
-    .image-tooltip-image {
-      width: 60px !important;
-      max-width: 60px !important;
-      min-width: 60px !important;
-      height: 40px !important;
-      max-height: 40px !important;
-      min-height: 40px !important;
-      margin: 6px auto 0 auto !important;
-    }
-    
-    .image-tooltip-text {
-      padding: 7px 8px 8px 8px;
-    }
-    
-    .image-tooltip-title {
-      font-size: 12px;
-    }
-    
-    .image-tooltip-description {
-      font-size: 10px;
-      -webkit-line-clamp: 3;
-    }
-    
-    .image-tooltip-close {
-      width: 14px;
-      height: 14px;
-      font-size: 9px;
-      top: 3px;
-      right: 3px;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .image-tooltip {
-      width: 140px;
-    }
-    
-    .image-tooltip-image {
-      width: 50px !important;
-      max-width: 50px !important;
-      min-width: 50px !important;
-      height: 35px !important;
-      max-height: 35px !important;
-      min-height: 35px !important;
-      margin: 5px auto 0 auto !important;
-    }
-    
-    .image-tooltip-text {
-      padding: 6px 7px 7px 7px;
-    }
-    
-    .image-tooltip-title {
-      font-size: 11px;
-    }
-    
-    .image-tooltip-description {
-      font-size: 9px;
-      -webkit-line-clamp: 3;
-    }
-  }
-  
-  /* OVERRIDE ORIGINAL - Optimized popup images for better visibility */
-  .custom-popup-image {
-    width: 100% !important;
-    height: auto !important;
-    max-height: 260px !important;
-    min-height: 180px !important;
-    object-fit: cover !important;
-    object-position: center !important;
-    display: block !important;
-    image-rendering: auto !important;
-    background: #f0f0f0 !important;
-    border-radius: 8px 8px 0 0 !important;
-    margin: 0 !important;
-    border: 1px solid #ddd !important;
-  }
-  
-  /* Custom Popup Content container - force small size */
-  .custom-popup-content,
-  div[class*="custom-popup-content"],
-  .mapboxgl-popup-content > div {
-    width: 100% !important;
-    max-width: none !important;
-    min-width: 0 !important;
-    padding: 0 !important;
-    display: block !important;
-    text-align: left !important;
-  }
-  
-  /* Override ANY inline styles or JavaScript dynamic sizing */
-  img[style*="width"],
-  img[style*="height"],
-  div[style*="width"] img,
-  div[style*="height"] img {
-    max-width: 100% !important;
-    height: auto !important;
-    border: 1px solid #ddd !important; /* Normalize inline style overrides */
-  }
-  
-  /* Text content in small popup */
-  .custom-popup-text,
-  .mapboxgl-popup-content .custom-popup-text {
-    padding: 4px 6px !important;
-    font-size: 11px !important;
-    line-height: 1.3 !important;
-  }
-  
-  .custom-popup-title,
-  .mapboxgl-popup-content .custom-popup-title {
-    font-size: 12px !important;
-    margin: 2px 0 !important;
-    line-height: 1.2 !important;
-  }
-  
-  .custom-popup-desc,
-  .mapboxgl-popup-content .custom-popup-desc {
-    font-size: 10px !important;
-    margin: 0 !important;
-    line-height: 1.2 !important;
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
-  }
-  
-  /* Text content */
-  .custom-popup-text {
-    padding: 14px 16px 16px;
-    background: #fff;
-  }
-  
-  .custom-popup-title {
+  .custom-infowindow-title {
     margin: 0 0 8px 0;
-    font-family: 'Merriweather', serif;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
-    color: #2d1a19;
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
-  .custom-popup-desc {
-    margin: 0;
-    font-size: 13px;
-    color: #666;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
-  /* Close button styling */
-  .mapboxgl-popup-close-button {
-    font-size: 16px;
-    padding: 4px;
-    color: #666;
-    border-radius: 0 8px 0 0;
-  }
-  
-  .mapboxgl-popup-close-button:hover {
-    background: rgba(0,0,0,0.05);
     color: #333;
+    line-height: 1.3;
   }
   
-  /* SPECIFIC TARGETING - Only popup images */
-  .custom-popup-image[src],
-  .mapboxgl-popup [src*="images/locations"],
-  .image-tooltip img[src] {
-    width: 100% !important;
-    height: auto !important;
-    max-height: 220px !important;
-    border: 1px solid #ccc !important;
-    object-fit: cover !important;
-  }
-</style>
-
-<!-- Load Mapbox GL JS from CDN -->
-<link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
-<script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
-
-<!-- Load Mapbox Geocoder Plugin -->
-<link href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css' rel='stylesheet' />
-<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js'></script>
-
-<!-- FORCE OVERRIDE STYLES - Load after external CSS -->
-<style is:global>
-  /* SPECIFIC POPUP TARGETING - Only target images inside popups */
-  .mapboxgl-popup img,
-  .mapboxgl-popup-content img {
-    max-width: 100% !important;
-    height: auto !important;
-    border: 1px solid #ddd !important;
-    object-fit: cover !important;
+  .custom-infowindow-description {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
   }
   
-  .custom-popup-image {
-    width: 100% !important;
-    height: auto !important;
-    max-height: 260px !important;
-    min-height: 180px !important;
-    border: 1px solid #ddd !important;
-    object-fit: cover !important;
-    border-radius: 8px 8px 0 0 !important;
+  .custom-infowindow-category {
+    display: inline-block;
+    padding: 4px 10px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #555;
+    text-transform: capitalize;
   }
   
-  .mapboxgl-popup-content img {
-    max-width: 100% !important;
-    height: auto !important;
-    border: 1px solid #ddd !important;
-    object-fit: cover !important;
+  .custom-infowindow-featured {
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    color: #333;
+    margin-left: 8px;
   }
-</style>
-
-<!-- Initialize map with locations data -->
-<script define:vars={{ locationsData, restaurantsData: restaurants, hotelsData: hotels }}>
-  // Global variables
-  let map = null;
-  let markers = [];
-  // Category marker arrays
-  let landmarkMarkers = markers; // alias, keeps compatibility with existing logic
-  let restaurantMarkers = [];
-  let hotelMarkers = [];
-
-  let locations = locationsData;
-  let restaurantsList = restaurantsData || [];
-  let hotelsList = hotelsData || [];
-  let filteredLocations = [...locations];
-  let routeLayer = null;
-  let userLocationMarker = null;
-  let currentPopup = null;
   
-  // Initialize everything when DOM is ready
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Initializing redesigned interactive map');
-    console.log('📍 Locations data:', locations);
-    
-    // Initialize map
-    initializeMap();
-    
-    // Render initial locations list
-    renderLocationsList(locations);
-    
-    // Add global click handler for any popup images that might be missed
-    document.addEventListener('click', (e) => {
-      if (e.target.classList.contains('custom-popup-image')) {
-        const src = e.target.src;
-        const alt = e.target.alt;
-        if (src && !src.includes('placeholder')) {
-          openImageModal(src, alt, e.target);
-        }
-      }
-    });
-  });
-  
-  // Initialize Mapbox map
-  function initializeMap() {
-    // Wait for Mapbox to load
-    if (typeof mapboxgl === 'undefined') {
-      setTimeout(initializeMap, 100);
-      return;
+  /* Responsive InfoWindow for mobile */
+  @media (max-width: 480px) {
+    .custom-infowindow {
+      max-width: 280px;
     }
     
-    mapboxgl.accessToken = 'pk.eyJ1IjoiZ2lubGlmIiwiYSI6ImNtZThleGh1azBmOWoya29pd24wOThuMmkifQ.71MH7NWOxxZEeJSqw-vUbg';
+    .custom-infowindow-image {
+      height: 140px;
+    }
     
-    map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/mapbox/outdoors-v12', // Outdoor style with terrain features
-      center: [108.0, 14.0],
-      zoom: 11,
-      pitch: 60, // Tilted view for 3D effect
-      bearing: -17.6,
-      antialias: true, // Enable antialiasing for smoother 3D
-      terrain: { source: 'mapbox-dem', exaggeration: 1.5 } // Add terrain elevation
-    });
+    .custom-infowindow-content {
+      padding: 12px;
+    }
     
-    // Add controls
-    map.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    map.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
+    .custom-infowindow-title {
+      font-size: 16px;
+    }
     
-    // Initialize Mapbox Geocoder for global search
-    const geocoder = new MapboxGeocoder({
-      accessToken: mapboxgl.accessToken,
-      mapboxgl: mapboxgl,
-      placeholder: 'Tìm kiếm địa chỉ hoặc địa danh...',
-      countries: 'VN',
-      language: 'vi',
-      limit: 6,
-      bbox: [102.144, 8.566, 109.469, 23.393], // Vietnam bounding box
-      proximity: {
-        longitude: 108.0,
-        latitude: 14.0
-      },
-      marker: {
-        color: '#ff6b6b'
-      },
-      flyTo: {
-        zoom: 14,
-        pitch: 60,
-        bearing: 0
-      }
-    });
+    .custom-infowindow-description {
+      font-size: 13px;
+    }
     
-    // Add geocoder to map (top-right to avoid overlap with panel)
-    map.addControl(geocoder, 'top-right');
+    .map-logo {
+      width: 80px;
+      top: 15px;
+      left: 15px;
+    }
+    
+    .search-input {
+      width: 260px;
+      padding: 10px 14px;
+      font-size: 14px;
+      top: 15px;
+      right: 40px;
+    }
+  }
+</style>
 
-    // When a user selects a result from the geocoder, immediately draw directions
-    geocoder.on('result', (e) => {
-      try {
-        const [lng, lat] = e.result.center; // Mapbox returns [lng, lat]
-        // Optionally, highlight searched location at the top of the list
-        const result = e.result;
-        const searchedLocation = {
-          id: result.id,
-          title: result.text || (result.place_name ? result.place_name.split(',')[0] : 'Địa điểm'),
-          titleVi: result.text || (result.place_name ? result.place_name.split(',')[0] : 'Địa điểm'),
-          excerpt: result.place_name || '',
-          excerptVi: result.place_name || '',
-          lat,
-          lng,
-          category: (result.place_type && result.place_type[0]) || 'place',
-          source: 'Kết quả tìm kiếm'
-        };
-        if (typeof renderLocationsList === 'function') {
-          renderLocationsList([searchedLocation, ...locations]);
-        }
-        // Trigger route drawing from user's location to the selected destination
-        if (typeof window.getDirections === 'function') {
-          window.getDirections(lat, lng); // our getDirections expects (destLat, destLng)
-        }
-      } catch (err) {
-        console.error('Failed to handle geocoder result:', err);
-      }
-    });
-
-    // Clear any existing route when the geocoder input is cleared
-    geocoder.on('clear', () => {
-      try {
-        if (map.getLayer('route')) map.removeLayer('route');
-        if (map.getSource('route')) map.removeSource('route');
-        const info = document.querySelector('.route-info');
-        const backdrop = document.querySelector('.route-backdrop');
-        if (info) info.remove();
-        if (backdrop) backdrop.remove();
-      } catch (err) {
-        console.warn('Nothing to clear after geocoder clear:', err);
-      }
-    });
+<!-- Google Maps initialization script -->
+<script is:inline define:vars={{ googleMapsApiKey: import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY, locationsData }}>
+  (function() {
+    console.log('🗺️ Initializing Google Maps...');
     
-    // Add markers and 3D buildings when map loads
-    map.on('load', () => {
-      console.log('✅ Map loaded, adding terrain, 3D buildings and markers');
+    // Global variables for directions functionality
+    var userLocation = null;
+    var directionsService = null;
+    var directionsRenderer = null;
+    var userLocationMarker = null;
+    
+    // Define the global callback required by the Google Maps loader
+    window.initMap = function initMap() {
+      console.log('✅ Google Maps API loaded, initializing map...');
       
-      // Add terrain source for elevation
-      map.addSource('mapbox-dem', {
-        'type': 'raster-dem',
-        'url': 'mapbox://mapbox.mapbox-terrain-dem-v1',
-        'tileSize': 512,
-        'maxzoom': 14
+      var mapElement = document.getElementById('map');
+      if (!mapElement) {
+        console.error('❌ Map container element not found!');
+        return;
+      }
+      
+      if (!window.google || !window.google.maps) {
+        console.error('❌ Google Maps API failed to load!');
+        return;
+      }
+      
+      // Gia Lai province center coordinates
+      var giaLai = { lat: 13.98, lng: 108.00 };
+      
+      // Create the map with 3D tilt and simplified controls
+      var map = new window.google.maps.Map(mapElement, {
+        center: giaLai,
+        zoom: 10,
+        mapTypeId: 'roadmap', // Use roadmap view
+        tilt: 45, // Enable 45-degree tilt for 3D view
+        // Simplified UI controls
+        zoomControl: true,
+        mapTypeControl: false, // Remove map/satellite toggle
+        scaleControl: true,
+        streetViewControl: true,
+        rotateControl: true,
+        tiltControl: true, // Enable tilt control
+        fullscreenControl: true
       });
       
-      // Set the terrain elevation
-      map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+      console.log('✅ Google Maps initialized successfully!');
       
-      // Add sky layer for better 3D effect
-      map.addLayer({
-        'id': 'sky',
-        'type': 'sky',
-        'paint': {
-          'sky-type': 'atmosphere',
-          'sky-atmosphere-sun': [0.0, 90.0],
-          'sky-atmosphere-sun-intensity': 15
+      // Store map reference globally for future use
+      window.map = map;
+      
+      // Initialize Directions services
+      directionsService = new google.maps.DirectionsService();
+      directionsRenderer = new google.maps.DirectionsRenderer({
+        polylineOptions: {
+          strokeColor: '#4285F4',
+          strokeWeight: 5,
+          strokeOpacity: 0.8
         }
       });
+      directionsRenderer.setMap(map);
+      console.log('🦭 Directions services initialized');
       
-      // Add 3D building layer
-      const layers = map.getStyle().layers;
-      const labelLayerId = layers.find(
-        (layer) => layer.type === 'symbol' && layer.layout['text-field']
-      )?.id;
+      // Array to store all markers for future reference
+      window.markers = [];
       
-      if (labelLayerId) {
-        // Add 3D buildings
-        map.addLayer(
-          {
-            'id': '3d-buildings',
-            'source': 'composite',
-            'source-layer': 'building',
-            'filter': ['==', 'extrude', 'true'],
-            'type': 'fill-extrusion',
-            'minzoom': 12,  // Lower minzoom to see buildings earlier
-            'paint': {
-              'fill-extrusion-color': [
-                'interpolate',
-                ['linear'],
-                ['get', 'height'],
-                0, '#dcdcdc',
-                10, '#d0d0d0',
-                20, '#c8c8c8',
-                40, '#b8b8b8',
-                60, '#a8a8a8',
-                100, '#989898'
-              ],
-              'fill-extrusion-height': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                12,
-                0,
-                12.05,
-                ['get', 'height']
-              ],
-              'fill-extrusion-base': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                12,
-                0,
-                12.05,
-                ['get', 'min_height']
-              ],
-              'fill-extrusion-opacity': 0.85
+      // Initialize Places Autocomplete Search
+      initializePlacesSearch(map);
+      
+      // Request user location permission
+      promptForUserLocation();
+      
+      // Variable to track currently open InfoWindow
+      var currentInfoWindow = null;
+      
+      // Add markers with staggered animation
+      console.log('📍 Adding ' + locationsData.length + ' location markers...');
+      
+      locationsData.forEach(function(location, index) {
+        // Create staggered delay based on index
+        var delay = index * 150; // 150ms between each marker
+        
+        setTimeout(function() {
+          // Create marker with drop animation
+          var marker = new google.maps.Marker({
+            position: { lat: location.lat, lng: location.lng },
+            map: map,
+            title: location.titleVi || location.title,
+            animation: google.maps.Animation.DROP,
+            // Optional: custom icon based on category
+            icon: {
+              url: getMarkerIcon(location.category),
+              scaledSize: new google.maps.Size(32, 32)
             }
+          });
+          
+          // Create InfoWindow with styled content
+          var infoWindowContent = '<div class="custom-infowindow">';
+          
+          // Add image if available
+          if (location.image) {
+            infoWindowContent += '<img class="custom-infowindow-image" src="' + location.image + '" alt="' + (location.titleVi || location.title) + '" onerror="this.style.display=\'none\'" />';
+          }
+          
+          infoWindowContent += '<div class="custom-infowindow-content">';
+          infoWindowContent += '<h3 class="custom-infowindow-title">' + (location.titleVi || location.title) + '</h3>';
+          infoWindowContent += '<p class="custom-infowindow-description">' + (location.excerptVi || location.excerpt) + '</p>';
+          infoWindowContent += '<span class="custom-infowindow-category">' + location.category + '</span>';
+          
+          if (location.featured) {
+            infoWindowContent += '<span class="custom-infowindow-category custom-infowindow-featured">⭐ Nổi bật</span>';
+          }
+          
+          infoWindowContent += '</div></div>';
+          
+          var infoWindow = new google.maps.InfoWindow({
+            content: infoWindowContent,
+            maxWidth: 320
+          });
+          
+          // Add click listener to marker
+          marker.addListener('click', function() {
+            // Close currently open InfoWindow if any
+            if (currentInfoWindow) {
+              currentInfoWindow.close();
+            }
+            
+            // Open this InfoWindow
+            infoWindow.open(map, marker);
+            currentInfoWindow = infoWindow;
+            
+            // Optional: Pan map to center on marker
+            map.panTo(marker.getPosition());
+            
+            // Optional: Zoom in slightly
+            if (map.getZoom() < 13) {
+              map.setZoom(13);
+            }
+            
+            // Calculate and display route to this location
+            calculateAndDisplayRoute({ lat: location.lat, lng: location.lng });
+          });
+          
+          // Store marker reference
+          window.markers.push({
+            marker: marker,
+            location: location,
+            infoWindow: infoWindow
+          });
+          
+          console.log('✅ Added marker for: ' + location.title);
+        }, delay);
+      });
+      
+      // Helper function to get marker icon based on category
+      function getMarkerIcon(category) {
+        // You can customize these URLs based on your actual icon files
+        var iconBase = 'https://maps.google.com/mapfiles/ms/icons/';
+        var icons = {
+          'nature': iconBase + 'green-dot.png',
+          'culture': iconBase + 'purple-dot.png',
+          'history': iconBase + 'yellow-dot.png',
+          'waterfall': iconBase + 'blue-dot.png',
+          'mountain': iconBase + 'orange-dot.png',
+          'religious': iconBase + 'pink-dot.png'
+        };
+        return icons[category] || iconBase + 'red-dot.png';
+      }
+      
+      // Optional: Add listener to close InfoWindow when clicking on map
+      map.addListener('click', function() {
+        if (currentInfoWindow) {
+          currentInfoWindow.close();
+          currentInfoWindow = null;
+        }
+      });
+      
+      // Function to initialize Places Autocomplete
+      function initializePlacesSearch(map) {
+        console.log('🔍 Initializing Places Autocomplete...');
+        
+        // Get the search input element
+        var searchInput = document.getElementById('pac-input');
+        if (!searchInput) {
+          console.error('❌ Search input element not found!');
+          return;
+        }
+        
+        // Create Autocomplete instance
+        var autocomplete = new google.maps.places.Autocomplete(searchInput, {
+          // Bias results to Vietnam and Gia Lai region
+          componentRestrictions: { country: 'vn' },
+          fields: ['geometry', 'name', 'formatted_address', 'place_id'],
+          types: ['establishment', 'geocode']
+        });
+        
+        // Bias autocomplete results towards map's viewport
+        autocomplete.bindTo('bounds', map);
+        
+        // Create a marker for search results (initially hidden)
+        var searchMarker = new google.maps.Marker({
+          map: null, // Don't show on map yet
+          anchorPoint: new google.maps.Point(0, -29),
+          icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+            scaledSize: new google.maps.Size(40, 40)
+          }
+        });
+        
+        // Create InfoWindow for search result
+        var searchInfoWindow = new google.maps.InfoWindow();
+        
+        // Listen for place selection
+        autocomplete.addListener('place_changed', function() {
+          searchInfoWindow.close();
+          searchMarker.setVisible(false);
+          
+          var place = autocomplete.getPlace();
+          
+          if (!place.geometry || !place.geometry.location) {
+            console.warn('⚠️ No geometry found for place: ' + place.name);
+            return;
+          }
+          
+          console.log('✅ Place selected: ' + place.name);
+          
+          // If the place has a viewport, fit the map to it
+          if (place.geometry.viewport) {
+            map.fitBounds(place.geometry.viewport);
+          } else {
+            // Otherwise, center and zoom to the location
+            map.setCenter(place.geometry.location);
+            map.setZoom(17);
+          }
+          
+          // Position and show the search marker
+          searchMarker.setPosition(place.geometry.location);
+          searchMarker.setMap(map);
+          
+          // Create content for InfoWindow
+          var infoContent = '<div class="custom-infowindow">';
+          infoContent += '<div class="custom-infowindow-content">';
+          infoContent += '<h3 class="custom-infowindow-title">' + place.name + '</h3>';
+          if (place.formatted_address) {
+            infoContent += '<p class="custom-infowindow-description">' + place.formatted_address + '</p>';
+          }
+          infoContent += '<span class="custom-infowindow-category custom-infowindow-featured">🔍 Kết quả tìm kiếm</span>';
+          infoContent += '</div></div>';
+          
+          searchInfoWindow.setContent(infoContent);
+          searchInfoWindow.open(map, searchMarker);
+          
+          // Close any existing location InfoWindows
+          if (currentInfoWindow) {
+            currentInfoWindow.close();
+            currentInfoWindow = null;
+          }
+          
+          // Calculate and display route to this searched location
+          calculateAndDisplayRoute(place.geometry.location);
+        });
+        
+        console.log('✅ Places Autocomplete initialized successfully!');
+      }
+      
+      // Function to prompt for user location
+      function promptForUserLocation() {
+        console.log('📍 Requesting user location permission...');
+        
+        if (!navigator.geolocation) {
+          console.warn('⚠️ Geolocation is not supported by this browser.');
+          return;
+        }
+        
+        navigator.geolocation.getCurrentPosition(
+          // Success callback
+          function(position) {
+            userLocation = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            
+            console.log('✅ User location obtained:', userLocation);
+            
+            // Create a marker for user location
+            if (userLocationMarker) {
+              userLocationMarker.setMap(null);
+            }
+            
+            userLocationMarker = new google.maps.Marker({
+              position: userLocation,
+              map: map,
+              title: 'Vị trí của bạn / Your location',
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 10,
+                fillColor: '#4285F4',
+                fillOpacity: 0.8,
+                strokeColor: '#ffffff',
+                strokeWeight: 2
+              },
+              zIndex: 999
+            });
+            
+            // Add pulse animation effect
+            var pulseCircle = new google.maps.Circle({
+              map: map,
+              center: userLocation,
+              radius: 30,
+              strokeColor: '#4285F4',
+              strokeOpacity: 0,
+              fillColor: '#4285F4',
+              fillOpacity: 0.3
+            });
+            
+            // Optional: Animate the pulse
+            var radius = 30;
+            var opacity = 0.3;
+            setInterval(function() {
+              radius += 1;
+              opacity -= 0.01;
+              if (radius > 100) {
+                radius = 30;
+                opacity = 0.3;
+              }
+              pulseCircle.setRadius(radius);
+              pulseCircle.setOptions({ fillOpacity: Math.max(0, opacity) });
+            }, 50);
           },
-          labelLayerId
+          // Error callback
+          function(error) {
+            console.warn('❌ Location permission denied or error:', error.message);
+            userLocation = null;
+            // User denied permission - Directions won't work but map continues normally
+          },
+          // Options
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 30000
+          }
         );
       }
       
-      addMarkers();
-
-      // Build markers for Restaurants and Hotels but DO NOT add to map initially
-      buildRestaurantMarkers(restaurantsList);
-      buildHotelMarkers(hotelsList);
-
-      // Initialize filter controls (toggling visibility)
-      setupCategoryFilters();
-    });
-  }
-  
-  // Add markers for Landmarks (địa danh)
-  function addMarkers() {
-    locations.forEach(location => {
-      // Create custom marker element
-      const el = document.createElement('div');
-      el.className = 'map-marker';
-      el.style.cssText = `
-        width: 32px;
-        height: 32px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 50%;
-        border: 3px solid white;
-        cursor: pointer;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      `;
-      
-      // Create marker - FIXED: No hover events that modify position
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([location.lng, location.lat])
-        .addTo(map);
-      
-      // Create popup with smart positioning
-      const imageUrl = location.image || '/images/placeholder-location.svg';
-      const altText = (location.titleVi || location.title || 'Location').replace(/"/g, '&quot;');
-      
-      // Determine popup anchor based on marker position
-      let anchor = 'bottom'; // default
-      
-        // Function to determine best anchor position avoiding floating panel
-      const getSmartAnchor = () => {
-        if (!map) return 'bottom';
-        const point = map.project([location.lng, location.lat]);
-        const mapWidth = map.getContainer().offsetWidth;
-        const mapHeight = map.getContainer().offsetHeight;
+      // Function to calculate and display route
+      function calculateAndDisplayRoute(destination) {
+        console.log('🦭 Calculating route to:', destination);
         
-        // Responsive panel width detection
-        const isMobile = mapWidth <= 768;
-        const panelWidth = isMobile ? Math.min(mapWidth - 40, 380) : 400;
-        const isInPanelArea = !isMobile && point.x < panelWidth;
+        // Check if user location is available
+        if (!userLocation) {
+          console.log('⚠️ User location not available. Cannot calculate route.');
+          return; // "Nếu No thì giữ nguyên"
+        }
         
-        // Mobile-first approach
-        if (isMobile) {
-          // On mobile, prefer bottom or top to avoid sides
-          if (point.y < mapHeight * 0.4) {
-            return 'bottom';
-          } else if (point.y > mapHeight * 0.6) {
-            return 'top';
+        // Check if directions services are initialized
+        if (!directionsService || !directionsRenderer) {
+          console.error('❌ Directions services not initialized!');
+          return;
+        }
+        
+        // Prepare the directions request
+        var request = {
+          origin: userLocation,
+          destination: destination,
+          travelMode: google.maps.TravelMode.DRIVING,
+          unitSystem: google.maps.UnitSystem.METRIC,
+          language: 'vi' // Use Vietnamese for directions text
+        };
+        
+        // Call the Directions Service
+        directionsService.route(request, function(result, status) {
+          if (status === 'OK') {
+            console.log('✅ Route calculated successfully!');
+            
+            // Display the route on the map
+            directionsRenderer.setDirections(result);
+            
+            // Get route information
+            var route = result.routes[0];
+            var leg = route.legs[0];
+            
+            // Log route details
+            console.log('📏 Distance:', leg.distance.text);
+            console.log('⏱️ Duration:', leg.duration.text);
+            
+            // Optional: Show route info in a toast/alert
+            showRouteInfo(leg.distance.text, leg.duration.text);
+          } else {
+            console.error('❌ Directions request failed:', status);
+            if (status === 'ZERO_RESULTS') {
+              alert('Không tìm thấy đường đi. Vui lòng thử lại.');
+            }
           }
-          return point.x < mapWidth * 0.5 ? 'right' : 'left';
-        }
-        
-        // Desktop: If marker is behind floating panel, force right anchor
-        if (isInPanelArea) {
-          return 'left'; // Popup appears to right of marker
-        }
-        
-        // If marker is in right third of remaining map area, anchor to left
-        if (point.x > mapWidth * 0.75) {
-          return 'left';
-        }
-        
-        // If marker is in top area, anchor to bottom
-        if (point.y < mapHeight * 0.25) {
-          return 'bottom';
-        }
-        
-        // If marker is in bottom area, anchor to top
-        if (point.y > mapHeight * 0.75) {
-          return 'top';
-        }
-        
-        // Default to right for markers in the clear area
-        return 'right';
-      };
-      
-      const popup = new mapboxgl.Popup({ 
-        offset: {
-          'top': [0, 15],
-          'bottom': [0, -15],
-          'left': [15, 0],
-          'right': [-15, 0],
-          'top-left': [10, 10],
-          'top-right': [-10, 10],
-          'bottom-left': [10, -10],
-          'bottom-right': [-10, -10]
-        },
-        maxWidth: '680px',
-        className: 'custom-mapbox-popup',
-        closeButton: true,
-        closeOnClick: false,
-        anchor: getSmartAnchor() // Set initial anchor
-      })
-        .setHTML(`
-          <div class="custom-popup-content">
-            <img 
-              class="custom-popup-image" 
-              src="${imageUrl}" 
-              alt="${altText}" 
-              onerror="this.onerror=null;this.src='/images/placeholder-location.svg';" 
-              loading="eager" 
-              decoding="sync"
-              onclick="openImageModal('${imageUrl.replace(/'/g, '\\\'')}', '${altText.replace(/'/g, '\\\'')}', this)" 
-              style="cursor: pointer;"
-              title="Click to view larger image"
-            />
-            <div class="custom-popup-text">
-              <h4 class="custom-popup-title">${location.titleVi || location.title || 'Unnamed Location'}</h4>
-              <p class="custom-popup-desc">${location.excerptVi || location.excerpt || 'No description available'}</p>
-            </div>
-          </div>
-        `);
-      
-      // When this popup opens, close any previously open popup and adjust anchor
-      popup.on('open', () => {
-        if (currentPopup && currentPopup !== popup) {
-          currentPopup.remove();
-        }
-        const smartAnchor = getSmartAnchor();
-        popup.options.anchor = smartAnchor;
-        currentPopup = popup;
-      });
-      
-      marker.setPopup(popup);
-      
-      // Store marker reference
-      markers.push({ marker, location, popup }); // landmarkMarkers alias points to markers
-    });
-  }
-
-  // Build Restaurant markers (Ẩm thực) without adding to map initially
-  function buildRestaurantMarkers(data) {
-    if (!Array.isArray(data)) return;
-    data.forEach(item => {
-      const el = document.createElement('div');
-      el.className = 'map-marker-restaurant';
-      el.style.cssText = `
-        width: 26px;
-        height: 26px;
-        background: #e67e22; /* orange */
-        border-radius: 50%;
-        border: 3px solid white;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-      `;
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat(item.coordinates);
-      const popup = new mapboxgl.Popup({ offset: 18 })
-        .setHTML(`
-          <div class="custom-popup-content">
-            <img class="custom-popup-image" src="${item.image}" alt="${(item.name || 'Restaurant').replace(/"/g,'&quot;')}" onerror="this.onerror=null;this.src='/images/placeholder-location.svg';" />
-            <div class="custom-popup-text">
-              <h4 class="custom-popup-title">${item.name}</h4>
-              <p class="custom-popup-desc">${item.description || ''}</p>
-              <p class="custom-popup-desc" style="margin-top:6px;color:#888;">${item.address || ''}</p>
-            </div>
-          </div>
-        `);
-      marker.setPopup(popup);
-      restaurantMarkers.push(marker);
-    });
-  }
-
-  // Build Hotel markers (Khách sạn) without adding to map initially
-  function buildHotelMarkers(data) {
-    if (!Array.isArray(data)) return;
-    data.forEach(item => {
-      const el = document.createElement('div');
-      el.className = 'map-marker-hotel';
-      el.style.cssText = `
-        width: 26px;
-        height: 26px;
-        background: #27ae60; /* green */
-        border-radius: 50%;
-        border: 3px solid white;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-      `;
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat(item.coordinates);
-      const popup = new mapboxgl.Popup({ offset: 18 })
-        .setHTML(`
-          <div class="custom-popup-content">
-            <img class="custom-popup-image" src="${item.image}" alt="${(item.name || 'Hotel').replace(/"/g,'&quot;')}" onerror="this.onerror=null;this.src='/images/placeholder-location.svg';" />
-            <div class="custom-popup-text">
-              <h4 class="custom-popup-title">${item.name}</h4>
-              <p class="custom-popup-desc">${item.description || ''}</p>
-              <p class="custom-popup-desc" style="margin-top:6px;color:#888;">${item.address || ''}</p>
-            </div>
-          </div>
-        `);
-      marker.setPopup(popup);
-      hotelMarkers.push(marker);
-    });
-  }
-
-  // Toggle helpers
-  function setMarkersVisibility(list, visible) {
-    if (!list) return;
-    list.forEach(entry => {
-      const mk = entry?.marker || entry; // support landmark objects and raw markers
-      if (!mk) return;
-      if (visible) mk.addTo(map); else mk.remove();
-    });
-  }
-
-  // Setup filter checkbox listeners
-  function setupCategoryFilters() {
-    const cbLandmarks = document.getElementById('filter-landmarks');
-    const cbRestaurants = document.getElementById('filter-restaurants');
-    const cbHotels = document.getElementById('filter-hotels');
-
-    if (cbLandmarks) {
-      cbLandmarks.addEventListener('change', (e) => {
-        setMarkersVisibility(landmarkMarkers, e.target.checked);
-      });
-    }
-    if (cbRestaurants) {
-      cbRestaurants.addEventListener('change', (e) => {
-        setMarkersVisibility(restaurantMarkers, e.target.checked);
-      });
-    }
-    if (cbHotels) {
-      cbHotels.addEventListener('change', (e) => {
-        setMarkersVisibility(hotelMarkers, e.target.checked);
-      });
-    }
-
-    // Initial state: show landmarks, hide others
-    setMarkersVisibility(landmarkMarkers, true);
-    setMarkersVisibility(restaurantMarkers, false);
-    setMarkersVisibility(hotelMarkers, false);
-  }
-  
-  // Render locations list
-  function renderLocationsList(locationsToRender) {
-    const container = document.getElementById('locations-list');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    if (locationsToRender.length === 0) {
-      container.innerHTML = `
-        <div class="no-results">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="15" y1="9" x2="9" y2="15"/>
-            <line x1="9" y1="9" x2="15" y2="15"/>
-          </svg>
-          <p style="margin: 0; font-size: 16px; color: #666;">Không tìm thấy địa điểm nào</p>
-        </div>
-      `;
-      return;
-    }
-    
-    locationsToRender.forEach((location, index) => {
-      const item = document.createElement('div');
-      item.className = 'location-item';
-      item.dataset.locationId = location.id;
-      
-      // Build list item content without directions button
-      item.innerHTML = `
-        <div class="location-content">
-          <span class="location-number">${index + 1}</span>
-          <div class="location-info">
-            <div class="location-name">${location.titleVi || location.title}</div>
-            ${location.source ? `<div class="location-source">${location.source}</div>` : ''}
-          </div>
-        </div>
-      `;
-      
-      // Add click handler
-      item.addEventListener('click', () => {
-        // Remove active class from all items
-        document.querySelectorAll('.location-item').forEach(el => {
-          el.classList.remove('active');
         });
-        
-        // Add active class to clicked item
-        item.classList.add('active');
-        
-        // Fly to location and automatically get directions
-flyToLocation(location);
-        getDirections(location.lat, location.lng);
-      });
+      }
       
-      container.appendChild(item);
-    });
-  }
-  
-  // Fly to location and open popup
-  function flyToLocation(location) {
-    if (!map) return;
-    
-    map.flyTo({
-      center: [location.lng, location.lat],
-      zoom: 14,
-      pitch: 60,
-      bearing: 0,
-      essential: true
-    });
-    
-    // Find and open the corresponding popup
-    const markerData = markers.find(m => m.location.id === location.id);
-    if (markerData) {
-      // Close currently open popup, then open this one
-      if (currentPopup && currentPopup !== markerData.popup) {
-        currentPopup.remove();
-      }
-      markerData.popup.addTo(map);
-      currentPopup = markerData.popup;
-    }
-  }
-  
-  // Legacy DOM-based Geocoder listener removed.
-  // We now listen directly on the geocoder instance via geocoder.on('result') inside initializeMap().
-  
-  // Get directions functionality
-  window.getDirections = function(destLat, destLng) {
-    // Check if geolocation is supported
-    if (!navigator.geolocation) {
-      alert('Trình duyệt của bạn không hỗ trợ định vị');
-      return;
-    }
-    
-    // Request user location
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const userLat = position.coords.latitude;
-        const userLng = position.coords.longitude;
-        
-        // Add user location marker if not exists
-        if (!userLocationMarker) {
-          const el = document.createElement('div');
-          el.style.cssText = `
-            width: 16px;
-            height: 16px;
-            background: #4285F4;
-            border-radius: 50%;
-            border: 3px solid white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-          `;
-          
-          userLocationMarker = new mapboxgl.Marker(el)
-            .setLngLat([userLng, userLat])
-            .addTo(map);
-        } else {
-          userLocationMarker.setLngLat([userLng, userLat]);
+      // Helper function to show route information
+      function showRouteInfo(distance, duration) {
+        // Create a simple info overlay
+        var existingInfo = document.getElementById('route-info-overlay');
+        if (existingInfo) {
+          existingInfo.remove();
         }
         
-        // Get route from Mapbox Directions API
-        try {
-          const response = await fetch(
-            `https://api.mapbox.com/directions/v5/mapbox/driving/` +
-            `${userLng},${userLat};${destLng},${destLat}?` +
-            `steps=true&geometries=geojson&access_token=${mapboxgl.accessToken}`
-          );
-          
-          const data = await response.json();
-          
-          if (data.routes && data.routes.length > 0) {
-            const route = data.routes[0];
-            
-            // Remove existing route if any
-            if (map.getLayer('route')) {
-              map.removeLayer('route');
-              map.removeSource('route');
-            }
-            
-            // Add route to map
-            map.addSource('route', {
-              type: 'geojson',
-              data: {
-                type: 'Feature',
-                properties: {},
-                geometry: route.geometry
-              }
-            });
-            
-            map.addLayer({
-              id: 'route',
-              type: 'line',
-              source: 'route',
-              layout: {
-                'line-join': 'round',
-                'line-cap': 'round'
-              },
-              paint: {
-                'line-color': '#4285F4',
-                'line-width': 5,
-                'line-opacity': 0.75
-              }
-            });
-            
-            // Fit map to show entire route
-            const bounds = new mapboxgl.LngLatBounds();
-            route.geometry.coordinates.forEach(coord => {
-              bounds.extend(coord);
-            });
-            
-            map.fitBounds(bounds, {
-              padding: { top: 80, bottom: 80, left: 380, right: 80 }
-            });
-            
-            // Show route information
-            const distance = (route.distance / 1000).toFixed(1);
-            const duration = Math.ceil(route.duration / 60);
-            
-            // Create route info popup - properly centered modal
-            const routeInfo = document.createElement('div');
-            routeInfo.style.cssText = `
-              position: fixed;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              background: white;
-              padding: 20px;
-              border-radius: 12px;
-              box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-              z-index: 10000;
-              max-width: 300px;
-              width: 90%;
-              border: 1px solid rgba(0,0,0,0.1);
-            `;
-            routeInfo.innerHTML = `
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <h4 style="margin: 0; color: #333; font-size: 18px;">Thông tin lộ trình</h4>
-                <button class="route-info-close" 
-                  style="background: none; border: none; font-size: 20px; cursor: pointer; color: #666; padding: 0; width: 24px; height: 24px;">
-                  ✕
-                </button>
-              </div>
-              <p style="margin: 8px 0; color: #666; font-size: 15px; display: flex; align-items: center; gap: 8px;">📏 Khoảng cách: <strong>${distance} km</strong></p>
-              <p style="margin: 8px 0; color: #666; font-size: 15px; display: flex; align-items: center; gap: 8px;">⏱️ Thời gian: <strong>${duration} phút</strong></p>
-            `;
-            
-            // Add modal backdrop
-            const backdrop = document.createElement('div');
-            backdrop.style.cssText = `
-              position: fixed;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              background: rgba(0, 0, 0, 0.5);
-              z-index: 9999;
-              backdrop-filter: blur(2px);
-            `;
-            
-            // Close on backdrop click - ensure map interactivity
-            backdrop.addEventListener('click', (e) => {
-              if (e.target === backdrop) { // Only close if clicking backdrop, not modal
-                backdrop.remove();
-                routeInfo.remove();
-                // Re-enable map interaction
-                if (map) {
-                  map.getCanvas().style.pointerEvents = 'auto';
-                }
-              }
-            });
-            
-            // Prevent modal content clicks from closing modal
-            routeInfo.addEventListener('click', (e) => {
-              e.stopPropagation();
-            });
-
-            // Close button just hides modal (keeps the route on map)
-            const closeBtn = routeInfo.querySelector('.route-info-close');
-            if (closeBtn) {
-              closeBtn.addEventListener('click', () => {
-                const backdropEl = document.querySelector('.route-backdrop');
-                if (backdropEl) backdropEl.remove();
-                if (routeInfo && routeInfo.parentNode) routeInfo.remove();
-              });
-            }
-            
-            // Remove any existing route info
-            const existingInfo = document.querySelector('.route-info');
-            const existingBackdrop = document.querySelector('.route-backdrop');
-            if (existingInfo) existingInfo.remove();
-            if (existingBackdrop) existingBackdrop.remove();
-            
-            routeInfo.className = 'route-info';
-            backdrop.className = 'route-backdrop';
-            document.body.appendChild(backdrop);
-            document.body.appendChild(routeInfo);
-          }
-        } catch (error) {
-          console.error('Error getting directions:', error);
-          alert('Không thể tìm được đường đi. Vui lòng thử lại.');
-        }
-      },
-      (error) => {
-        // Handle location permission denied
-        showLocationPermissionModal();
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-      }
-    );
-  };
-  
-  // Show location permission modal
-  function showLocationPermissionModal() {
-    const modal = document.createElement('div');
-    modal.className = 'location-permission-modal';
-    modal.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 15000;
-      backdrop-filter: blur(4px);
-    `;
-    
-    modal.innerHTML = `
-      <div style="
-        background: white;
-        border-radius: 12px;
-        padding: 24px;
-        max-width: 400px;
-        margin: 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-      ">
-        <h3 style="margin: 0 0 16px 0; color: #333;">📍 Cần quyền truy cập vị trí</h3>
-        <p style="margin: 0 0 20px 0; color: #666; line-height: 1.5;">
-          Để chỉ đường từ vị trí của bạn, chúng tôi cần quyền truy cập vị trí. 
-          Vui lòng cho phép truy cập vị trí trong trình duyệt của bạn.
-        </p>
-        <div style="display: flex; gap: 12px;">
-          <button onclick="this.closest('div[style]').parentElement.remove()" style="
-            flex: 1;
-            padding: 10px;
+        var infoDiv = document.createElement('div');
+        infoDiv.id = 'route-info-overlay';
+        infoDiv.style.cssText = `
+          position: absolute;
+          bottom: 60px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: white;
+          padding: 15px 25px;
+          border-radius: 30px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          z-index: 1000;
+          display: flex;
+          gap: 20px;
+          align-items: center;
+          font-family: 'Open Sans', sans-serif;
+        `;
+        
+        infoDiv.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">🚗</span>
+            <span style="font-weight: 600; color: #333;">${distance}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">⏱️</span>
+            <span style="font-weight: 600; color: #333;">${duration}</span>
+          </div>
+          <button onclick="this.parentElement.remove()" style="
             background: #f0f0f0;
             border: none;
-            border-radius: 6px;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
             cursor: pointer;
-            font-weight: 500;
-          ">Đóng</button>
-          <button onclick="location.reload()" style="
-            flex: 1;
-            padding: 10px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-          ">Thử lại</button>
-        </div>
-      </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Close modal when clicking outside - maintain map interactivity
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        modal.remove();
-        // Ensure map remains interactive
-        if (map) {
-          map.getCanvas().style.pointerEvents = 'auto';
-        }
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+          ">×</button>
+        `;
+        
+        document.querySelector('.map-container').appendChild(infoDiv);
+        
+        // Auto-hide after 10 seconds
+        setTimeout(function() {
+          if (document.getElementById('route-info-overlay')) {
+            document.getElementById('route-info-overlay').remove();
+          }
+        }, 10000);
       }
-    });
+    };
     
-    // Prevent modal content clicks from closing modal
-    const modalContent = modal.querySelector('div[style*="background: white"]');
-    if (modalContent) {
-      modalContent.addEventListener('click', (e) => {
-        e.stopPropagation();
-      });
-    }
-  }
-  
-  // Image Tooltip Functionality
-  let currentImageTooltip = null;
-  
-  // Function to open image tooltip near marker
-  window.openImageModal = function(imageSrc, imageAlt, markerElement) {
-    // Close any existing tooltip
-    if (currentImageTooltip) {
-      closeImageTooltip();
-    }
-    
-    // Find the marker position if not provided
-    let clickEvent = window.event || event;
-    let targetElement = markerElement || clickEvent?.target;
-    
-    // Create tooltip HTML
-    const tooltipHTML = `
-      <div class="image-tooltip small-thumbnail-popup" id="image-tooltip">
-        <div class="image-tooltip-content">
-          <button class="image-tooltip-close" type="button">
-            ✕
-          </button>
-          <img 
-            class="image-tooltip-image" 
-            src="${imageSrc}" 
-            alt="${imageAlt}" 
-            onerror="this.onerror=null;this.src='/images/placeholder-location.svg';"
-          />
-          <div class="image-tooltip-text">
-            <h4 class="image-tooltip-title">${imageAlt || 'Location Image'}</h4>
-            <p class="image-tooltip-description">Click to view location details</p>
-          </div>
-        </div>
-      </div>
-    `;
-    
-    // Add tooltip to map container
-    const mapContainer = document.querySelector('.map-container');
-    if (mapContainer) {
-      mapContainer.insertAdjacentHTML('beforeend', tooltipHTML);
-      currentImageTooltip = document.getElementById('image-tooltip');
-      
-      // Position tooltip near the click/marker
-      positionTooltip(currentImageTooltip, clickEvent);
-      
-      // Show tooltip with animation
-      setTimeout(() => {
-        if (currentImageTooltip) {
-          currentImageTooltip.classList.add('active');
+    // Load the Google Maps script asynchronously with callback
+    function loadGoogleMaps() {
+      try {
+        if (!googleMapsApiKey) {
+          console.error('❌ PUBLIC_GOOGLE_MAPS_API_KEY is missing. Check your .env file.');
+          return;
         }
-      }, 10);
-      
-      // Add event listeners
-      const closeButton = currentImageTooltip.querySelector('.image-tooltip-close');
-      if (closeButton) {
-        closeButton.addEventListener('click', closeImageTooltip);
+        
+        console.log('📦 Loading Google Maps API script...');
+        
+        var script = document.createElement('script');
+        script.async = true;
+        script.defer = true;
+        script.src = 'https://maps.googleapis.com/maps/api/js?key=' 
+          + encodeURIComponent(googleMapsApiKey) 
+          + '&callback=initMap&v=weekly&libraries=places,directions';
+        
+        script.onerror = function() {
+          console.error('❌ Failed to load Google Maps API script. Check your API key and network connection.');
+        };
+        
+        document.head.appendChild(script);
+      } catch (error) {
+        console.error('❌ Error loading Google Maps:', error);
       }
-      
-      // Close on ESC key
-      document.addEventListener('keydown', handleTooltipEscapeKey);
-      
-      // Close when clicking outside tooltip
-      document.addEventListener('click', handleOutsideClick, true);
     }
-  };
-  
-  // Position tooltip near marker/click point
-  function positionTooltip(tooltip, clickEvent) {
-    if (!tooltip || !clickEvent) return;
     
-    const mapContainer = document.querySelector('.map-container');
-    if (!mapContainer) return;
-    
-    const containerRect = mapContainer.getBoundingClientRect();
-    const tooltipWidth = 220;
-    const tooltipHeight = 140; // Approximate height with larger image
-    const offset = 15;
-    
-    let x, y;
-    
-    if (clickEvent.clientX && clickEvent.clientY) {
-      // Position relative to click coordinates
-      x = clickEvent.clientX - containerRect.left;
-      y = clickEvent.clientY - containerRect.top;
+    // Start loading when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadGoogleMaps);
     } else {
-      // Fallback to center-ish position
-      x = containerRect.width / 2;
-      y = containerRect.height / 2;
+      loadGoogleMaps();
     }
-    
-    // Determine best position to avoid viewport edges
-    let positionClass = 'tooltip-bottom';
-    let finalX = x;
-    let finalY = y + offset;
-    
-    // Check if tooltip would go off right edge
-    if (x + tooltipWidth > containerRect.width - 20) {
-      finalX = x - tooltipWidth - offset;
-      positionClass = 'tooltip-left';
-    }
-    
-    // Check if tooltip would go off bottom edge  
-    if (y + tooltipHeight > containerRect.height - 20) {
-      finalY = y - tooltipHeight - offset;
-      positionClass = positionClass.includes('left') ? 'tooltip-left' : 'tooltip-top';
-    }
-    
-    // Check if tooltip would go off left edge
-    if (finalX < 20) {
-      finalX = x + offset;
-      positionClass = y + tooltipHeight > containerRect.height - 20 ? 'tooltip-top' : 'tooltip-bottom';
-    }
-    
-    // Check if tooltip would go off top edge
-    if (finalY < 20) {
-      finalY = y + offset;
-      positionClass = finalX > containerRect.width / 2 ? 'tooltip-left' : 'tooltip-right';
-    }
-    
-    // Apply positioning
-    tooltip.style.left = `${Math.max(10, Math.min(finalX, containerRect.width - tooltipWidth - 10))}px`;
-    tooltip.style.top = `${Math.max(10, Math.min(finalY, containerRect.height - tooltipHeight - 10))}px`;
-    tooltip.classList.add(positionClass);
-  }
-  
-  // Function to close image tooltip
-  window.closeImageTooltip = function() {
-    if (!currentImageTooltip) return;
-    
-    // Hide tooltip with animation
-    currentImageTooltip.classList.remove('active');
-    
-    // Remove after animation
-    setTimeout(() => {
-      if (currentImageTooltip && currentImageTooltip.parentNode) {
-        currentImageTooltip.parentNode.removeChild(currentImageTooltip);
-        currentImageTooltip = null;
-      }
-      
-      // Remove event listeners
-      document.removeEventListener('keydown', handleTooltipEscapeKey);
-      document.removeEventListener('click', handleOutsideClick, true);
-    }, 200);
-  };
-  
-  // Handle ESC key for tooltip
-  function handleTooltipEscapeKey(e) {
-    if (e.key === 'Escape') {
-      closeImageTooltip();
-    }
-  }
-  
-  // Handle clicks outside tooltip
-  function handleOutsideClick(e) {
-    if (currentImageTooltip && !currentImageTooltip.contains(e.target) && !e.target.classList.contains('custom-popup-image')) {
-      closeImageTooltip();
-    }
-  }
-  
-  // Legacy function name support
-  window.closeImageModal = window.closeImageTooltip;
+  })();
 </script>

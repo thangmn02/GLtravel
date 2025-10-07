@@ -2,7 +2,7 @@
 /// <reference types="astro/client" />
 
 interface ImportMetaEnv {
-  readonly MAPBOX_ACCESS_TOKEN: string;
+  readonly PUBLIC_GOOGLE_MAPS_API_KEY: string;
 }
 
 interface ImportMeta {
