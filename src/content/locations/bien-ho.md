@@ -8,7 +8,7 @@ excerptVi: "Hồ nước trong miệng núi lửa cổ, nổi tiếng với làn
 category: "nature"
 tags: ["lake", "volcano", "nature", "photography", "camping"]
 image: "/images/locations-img/bien-ho.webp"
-entryFee: "Free"
+entryFee: "10.000VND(0.5$)"
 bestTime: "October to March"
 featured: true
 ---

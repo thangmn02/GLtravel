@@ -1,13 +1,42 @@
 ---
-// InteractiveMap.astro - Google Maps implementation
-// Enhanced with location markers, InfoWindows, and staggered animation
+// InteractiveMap.astro - Google Maps implementation (multi-category with tabs)
 import { getCollection } from 'astro:content';
+import hotelsRaw from '../data/hotels/hotels.json';
+import eateriesRaw from '../data/eateries/eateries.json';
 
-// Fetch all locations from content collection
+const rawEateriesData = eateriesRaw;
+
+function slugify(input) {
+  return String(input || '')
+    .normalize('NFD').replace(/\p{Diacritic}+/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
+// Server-side normalization for Ăn Uống: merge nested arrays into a flat list
+const eateriesData = [
+  ...(rawEateriesData?.cafes || []),
+  ...(rawEateriesData?.restaurants || [])
+].map((e) => ({
+  id: `${slugify(e.name)}-${Number(e.lat).toFixed(5)}-${Number(e.lng).toFixed(5)}`,
+  name: e.name,
+  lat: Number(e.lat),
+  lng: Number(e.lng),
+  description: e.description || '',
+  address: e.address || '',
+  hours: e.hours || '',
+  phone: e.phone || '',
+  type: e.type || '',
+  image: e.image || null,
+  categoryGroup: 'eatery'
+}));
+
+// Fetch all locations (Du Lịch)
 const locations = await getCollection('locations');
-
-// Transform locations for JavaScript use
-const locationsData = locations.map(location => ({
+const landmarksData = locations.map((location) => ({
   id: location.slug,
   title: location.data.title,
   titleVi: location.data.titleVi,
@@ -17,13 +46,59 @@ const locationsData = locations.map(location => ({
   excerptVi: location.data.excerptVi,
   category: location.data.category,
   image: location.data.image,
-  featured: location.data.featured || false
+  featured: location.data.featured || false,
+  categoryGroup: 'landmark'
 }));
+
+
+// Load Nghỉ ngơi
+let hotelsArray = [];
+if (Array.isArray(hotelsRaw)) {
+  hotelsArray = hotelsRaw;
+} else if (hotelsRaw && Array.isArray(hotelsRaw.hotels)) {
+  hotelsArray = hotelsRaw.hotels;
+}
+const hotelsData = hotelsArray.map((h) => {
+  const id = `${slugify(h.name)}-${Number(h.lat).toFixed(5)}-${Number(h.lng).toFixed(5)}`;
+  return {
+    id,
+    name: h.name,
+    lat: Number(h.lat),
+    lng: Number(h.lng),
+    description: h.description || '',
+    address: h.address || '',
+    hours: h.hours || '',
+    phone: h.phone || '',
+    type: h.type || '',
+    image: h.image, // optional
+    categoryGroup: 'hotel'
+  };
+});
 ---
 
 <div class="map-container">
   <!-- Map canvas - fills entire viewport -->
   <div id="map"></div>
+  
+  <!-- Sidebar: Category Tabs -->
+  <aside class="category-sidebar" aria-label="Category sidebar">
+    <div class="category-tabs" role="tablist" aria-orientation="horizontal">
+      <button id="tab-landmarks" class="category-tab active" role="tab" aria-selected="true" aria-controls="panel-landmarks" tabindex="0">Du Lịch</button>
+      <button id="tab-eateries" class="category-tab" role="tab" aria-selected="false" aria-controls="panel-eateries" tabindex="-1">Ăn Uống</button>
+      <button id="tab-hotels" class="category-tab" role="tab" aria-selected="false" aria-controls="panel-hotels" tabindex="-1">Nghỉ ngơi</button>
+    </div>
+    <div class="category-panels">
+      <section id="panel-landmarks" class="category-panel active" role="tabpanel" aria-labelledby="tab-landmarks">
+        <div id="list-landmarks" class="category-list"></div>
+      </section>
+      <section id="panel-eateries" class="category-panel" role="tabpanel" aria-labelledby="tab-eateries">
+        <div id="list-eateries" class="category-list"></div>
+      </section>
+      <section id="panel-hotels" class="category-panel" role="tabpanel" aria-labelledby="tab-hotels">
+        <div id="list-hotels" class="category-list"></div>
+      </section>
+    </div>
+  </aside>
   
   <!-- Logo overlay -->
   <img 
@@ -195,6 +270,73 @@ const locationsData = locations.map(location => ({
     margin-left: 8px;
   }
   
+  /* Sidebar (Tabbed) */
+  .category-sidebar {
+    position: absolute;
+    top: 90px;
+    left: 20px;
+    width: 360px;
+    max-height: calc(100vh - 140px);
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.3);
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .category-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 10px;
+    background: rgba(255,255,255,0.06);
+  }
+  .category-tab {
+    flex: 1;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: rgba(255,255,255,0.8);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .category-tab:hover { background: rgba(255,255,255,0.08); }
+  .category-tab.active { background: rgba(102,126,234,0.55); color: #fff; }
+  .category-panels { position: relative; flex: 1; overflow: hidden; }
+  .category-panel {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  .category-panel.active { opacity: 1; visibility: visible; }
+  .category-list {
+    padding: 8px 10px 12px 10px;
+    overflow-y: auto;
+  }
+  .list-item {
+    padding: 12px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s, border-color 0.2s;
+  }
+  .list-item:hover { transform: translateX(2px); background: rgba(255,255,255,0.1); }
+  .list-item.active { border-color: rgba(102,126,234,0.8); background: rgba(102,126,234,0.22); }
+  .item-title { font-weight: 700; margin: 0 0 6px 0; font-size: 14px; }
+  .item-meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; color: rgba(255,255,255,0.8); }
+  .badge { display: inline-block; padding: 2px 6px; border-radius: 6px; background: rgba(255,255,255,0.14); font-size: 11px; }
+  
   /* Responsive InfoWindow for mobile */
   @media (max-width: 480px) {
     .custom-infowindow {
@@ -230,11 +372,13 @@ const locationsData = locations.map(location => ({
       top: 15px;
       right: 40px;
     }
+    
+    .category-sidebar { width: 86vw; left: 7vw; }
   }
 </style>
 
 <!-- Google Maps initialization script -->
-<script is:inline define:vars={{ googleMapsApiKey: import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY, locationsData }}>
+<script is:inline define:vars={{ googleMapsApiKey: import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY, landmarksData, eateriesData, hotelsData }}>
   (function() {
     console.log('🗺️ Initializing Google Maps...');
     
@@ -285,19 +429,24 @@ const locationsData = locations.map(location => ({
       
       // Initialize Directions services
       directionsService = new google.maps.DirectionsService();
-      directionsRenderer = new google.maps.DirectionsRenderer({
-        polylineOptions: {
-          strokeColor: '#4285F4',
-          strokeWeight: 5,
-          strokeOpacity: 0.8
-        }
-      });
+          directionsRenderer = new google.maps.DirectionsRenderer({
+            suppressMarkers: true, // prevent default A/B markers and their default InfoWindows
+            preserveViewport: true, // do not auto-change center/zoom; we control it
+            polylineOptions: {
+              strokeColor: '#4285F4',
+              strokeWeight: 5,
+              strokeOpacity: 0.8
+            }
+          });
       directionsRenderer.setMap(map);
       console.log('🦭 Directions services initialized');
       
-      // Array to store all markers for future reference
-      window.markers = [];
-      
+      // Arrays and maps for markers
+      var landmarkMarkers = [];
+      var eateryMarkers = [];
+      var hotelMarkers = [];
+      var markerById = new Map();
+
       // Initialize Places Autocomplete Search
       initializePlacesSearch(map);
       
@@ -306,134 +455,243 @@ const locationsData = locations.map(location => ({
       
       // Variable to track currently open InfoWindow
       var currentInfoWindow = null;
-      
-      // Add markers with staggered animation
-      console.log('📍 Adding ' + locationsData.length + ' location markers...');
-      
-      locationsData.forEach(function(location, index) {
-        // Create staggered delay based on index
-        var delay = index * 150; // 150ms between each marker
-        
-        setTimeout(function() {
-          // Create marker with drop animation
+
+      console.log('[Map] dataset sizes:', {
+        landmarks: Array.isArray(landmarksData) ? landmarksData.length : 'not-array',
+        eateries: Array.isArray(eateriesData) ? eateriesData.length : 'not-array',
+        hotels: Array.isArray(hotelsData) ? hotelsData.length : 'not-array'
+      });
+      if (Array.isArray(eateriesData) && eateriesData.length) {
+        console.log('[Map] sample eateries:', eateriesData.slice(0, 2));
+      }
+
+      // Build markers for all datasets (show only landmarks initially)
+      createMarkersForGroup(landmarksData, 'landmark');
+      createMarkersForGroup(eateriesData, 'eatery');
+      createMarkersForGroup(hotelsData, 'hotel');
+
+      // Sidebar: populate default list and set up tab switching
+      populateList('landmark', landmarksData);
+      setupTabs();
+
+      // Helper: create markers per group
+      function createMarkersForGroup(dataArray, group) {
+        if (!Array.isArray(dataArray)) {
+          console.warn('[Map] Expected array for group', group, 'but got', typeof dataArray, dataArray);
+          return;
+        }
+        console.log('[Map] creating markers for', group, 'count =', dataArray.length);
+        var iconUrl = getGroupIcon(group);
+        dataArray.forEach(function(item, idx) {
+          var title = group === 'landmark' ? (item.titleVi || item.title) : item.name;
+          var lat = Number(item.lat); var lng = Number(item.lng);
+          if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+            console.warn('[Map] skip item with invalid coords', { group, idx, item });
+            return;
+          }
+          var position = { lat: lat, lng: lng };
+
           var marker = new google.maps.Marker({
-            position: { lat: location.lat, lng: location.lng },
-            map: map,
-            title: location.titleVi || location.title,
+            position: position,
+            map: group === 'landmark' ? map : null, // only landmarks visible initially
+            title: title,
             animation: google.maps.Animation.DROP,
-            // Optional: custom icon based on category
             icon: {
-              url: getMarkerIcon(location.category),
+              url: iconUrl,
               scaledSize: new google.maps.Size(32, 32)
             }
           });
-          
-          // Create InfoWindow with styled content
-          var infoWindowContent = '<div class="custom-infowindow">';
-          
-          // Add image if available
-          if (location.image) {
-            infoWindowContent += '<img class="custom-infowindow-image" src="' + location.image + '" alt="' + (location.titleVi || location.title) + '" onerror="this.style.display=\'none\'" />';
-          }
-          
-          infoWindowContent += '<div class="custom-infowindow-content">';
-          infoWindowContent += '<h3 class="custom-infowindow-title">' + (location.titleVi || location.title) + '</h3>';
-          infoWindowContent += '<p class="custom-infowindow-description">' + (location.excerptVi || location.excerpt) + '</p>';
-          infoWindowContent += '<span class="custom-infowindow-category">' + location.category + '</span>';
-          
-          if (location.featured) {
-            infoWindowContent += '<span class="custom-infowindow-category custom-infowindow-featured">⭐ Nổi bật</span>';
-          }
-          
-          infoWindowContent += '</div></div>';
-          
+
           var infoWindow = new google.maps.InfoWindow({
-            content: infoWindowContent,
+            content: buildInfoContent(item, group),
             maxWidth: 320
           });
-          
-          // Add click listener to marker
+
           marker.addListener('click', function() {
-            // Close currently open InfoWindow if any
-            if (currentInfoWindow) {
-              currentInfoWindow.close();
-            }
-            
-            // Open this InfoWindow
-            infoWindow.open(map, marker);
-            currentInfoWindow = infoWindow;
-            
-            // Optional: Pan map to center on marker
-            map.panTo(marker.getPosition());
-            
-            // Optional: Zoom in slightly
-            if (map.getZoom() < 13) {
-              map.setZoom(13);
-            }
-            
-            // Calculate and display route to this location
-            calculateAndDisplayRoute({ lat: location.lat, lng: location.lng });
+            if (currentInfoWindow) { currentInfoWindow.close(); currentInfoWindow = null; }
+            var target = marker.getPosition();
+            map.panTo(target);
+            google.maps.event.addListenerOnce(map, 'idle', function() {
+              map.setZoom(15);
+              infoWindow.open({ map: map, anchor: marker, disableAutoPan: true, shouldFocus: false });
+              currentInfoWindow = infoWindow;
+              // Draw route to this marker
+              calculateAndDisplayRoute(target);
+              // Highlight list item for this marker
+              highlightListItemById(item.id);
+            });
           });
-          
-          // Store marker reference
-          window.markers.push({
-            marker: marker,
-            location: location,
-            infoWindow: infoWindow
-          });
-          
-          console.log('✅ Added marker for: ' + location.title);
-        }, delay);
-      });
-      
-      // Helper function to get marker icon based on category
-      function getMarkerIcon(category) {
-        // You can customize these URLs based on your actual icon files
-        var iconBase = 'https://maps.google.com/mapfiles/ms/icons/';
-        var icons = {
-          'nature': iconBase + 'green-dot.png',
-          'culture': iconBase + 'purple-dot.png',
-          'history': iconBase + 'yellow-dot.png',
-          'waterfall': iconBase + 'blue-dot.png',
-          'mountain': iconBase + 'orange-dot.png',
-          'religious': iconBase + 'pink-dot.png'
-        };
-        return icons[category] || iconBase + 'red-dot.png';
+
+          markerById.set(item.id, { marker: marker, infoWindow: infoWindow, group: group });
+          if (group === 'landmark') { landmarkMarkers.push(marker); }
+          else if (group === 'eatery') { eateryMarkers.push(marker); }
+          else if (group === 'hotel') { hotelMarkers.push(marker); }
+        });
       }
-      
-      // Optional: Add listener to close InfoWindow when clicking on map
-      map.addListener('click', function() {
-        if (currentInfoWindow) {
-          currentInfoWindow.close();
-          currentInfoWindow = null;
+
+      // Helper: marker icons by group
+      function getGroupIcon(group) {
+        var base = 'https://maps.google.com/mapfiles/ms/icons/';
+        if (group === 'landmark') return base + 'green-dot.png';
+        if (group === 'eatery') return base + 'pink-dot.png';
+        if (group === 'hotel') return base + 'blue-dot.png';
+        return base + 'red-dot.png';
+      }
+
+      // Build InfoWindow content with intelligent image handling
+      function buildInfoContent(item, group) {
+        var title = group === 'landmark' ? (item.titleVi || item.title) : item.name;
+        var desc = group === 'landmark' ? (item.excerptVi || item.excerpt) : (item.description || '');
+        var categoryLabel = group === 'landmark' ? 'Du Lịch' : (group === 'eatery' ? 'Ăn Uống' : 'Nghỉ ngơi');
+        var html = '<div class="custom-infowindow">';
+        if (item.image) {
+          html += '<img class="custom-infowindow-image" src="' + item.image + '" alt="' + title + '" onerror="this.style.display=\'none\'" />';
         }
+        html += '<div class="custom-infowindow-content">';
+        html += '<h3 class="custom-infowindow-title">' + (title || '') + '</h3>';
+        if (desc) html += '<p class="custom-infowindow-description">' + desc + '</p>';
+        if (group !== 'landmark' && item.address) {
+          html += '<p class="custom-infowindow-description" style="margin-top:-6px; color:#555;"><strong>Địa chỉ:</strong> ' + item.address + '</p>';
+        }
+        html += '<span class="custom-infowindow-category">' + categoryLabel + '</span>';
+        if (group === 'landmark' && item.featured) {
+          html += '<span class="custom-infowindow-category custom-infowindow-featured">⭐ Nổi bật</span>';
+        }
+        html += '</div></div>';
+        return html;
+      }
+
+      // Close InfoWindow on map click
+      map.addListener('click', function() {
+        if (currentInfoWindow) { currentInfoWindow.close(); currentInfoWindow = null; }
       });
-      
+
+      // Tabs setup and handlers
+      function setupTabs() {
+        var tabLandmarks = document.getElementById('tab-landmarks');
+        var tabEateries = document.getElementById('tab-eateries');
+        var tabHotels = document.getElementById('tab-hotels');
+
+        function activate(group) {
+          // Tabs active state
+          [tabLandmarks, tabEateries, tabHotels].forEach(function(btn){ btn.classList.remove('active'); btn.setAttribute('aria-selected','false'); btn.setAttribute('tabindex','-1'); });
+          var tabBtn = group === 'landmark' ? tabLandmarks : (group === 'eatery' ? tabEateries : tabHotels);
+          tabBtn.classList.add('active');
+          tabBtn.setAttribute('aria-selected','true');
+          tabBtn.setAttribute('tabindex','0');
+
+          // Panels
+          var panels = [
+            document.getElementById('panel-landmarks'),
+            document.getElementById('panel-eateries'),
+            document.getElementById('panel-hotels')
+          ];
+          panels.forEach(function(p){ p.classList.remove('active'); });
+          var activePanel = document.getElementById(group === 'landmark' ? 'panel-landmarks' : (group === 'eatery' ? 'panel-eateries' : 'panel-hotels'));
+          activePanel.classList.add('active');
+
+          // Show/hide markers
+          showOnlyGroupMarkers(group);
+
+// Populate list
+          if (group === 'landmark') populateList(group, landmarksData);
+          else if (group === 'eatery') populateList(group, eateriesData);
+          else populateList(group, hotelsData);
+
+          // Fit bounds to visible markers
+          fitToVisibleMarkers(group);
+
+          // Close any open InfoWindow
+          if (currentInfoWindow) { currentInfoWindow.close(); currentInfoWindow = null; }
+        }
+
+        tabLandmarks.addEventListener('click', function(){ activate('landmark'); });
+        tabEateries.addEventListener('click', function(){ activate('eatery'); });
+        tabHotels.addEventListener('click', function(){ activate('hotel'); });
+      }
+
+      function showOnlyGroupMarkers(group) {
+        function setMarkers(markers, visible) { markers.forEach(function(m){ m.setMap(visible ? map : null); }); }
+        setMarkers(landmarkMarkers, group === 'landmark');
+        setMarkers(eateryMarkers, group === 'eatery');
+        setMarkers(hotelMarkers, group === 'hotel');
+      }
+
+      function fitToVisibleMarkers(group) {
+        var visible = group === 'landmark' ? landmarkMarkers : (group === 'eatery' ? eateryMarkers : hotelMarkers);
+        if (!visible.length) return;
+        if (visible.length === 1) {
+          var pos = visible[0].getPosition();
+          map.setCenter(pos);
+          map.setZoom(14);
+          return;
+        }
+        var bounds = new google.maps.LatLngBounds();
+        visible.forEach(function(m){ bounds.extend(m.getPosition()); });
+        map.fitBounds(bounds, { top: 60, right: 60, bottom: 80, left: 420 });
+      }
+
+      function populateList(group, dataArray) {
+        var listId = group === 'landmark' ? 'list-landmarks' : (group === 'eatery' ? 'list-eateries' : 'list-hotels');
+        var listEl = document.getElementById(listId);
+        if (!listEl) return;
+        if (!Array.isArray(dataArray)) {
+          console.warn('[Map] populateList expected array for', group, 'but got', typeof dataArray, dataArray);
+          listEl.innerHTML = '<div style="padding:12px;color:#ccc;">No items</div>';
+          return;
+        }
+        console.log('[Map] populateList', group, 'count =', dataArray.length);
+        listEl.innerHTML = '';
+        dataArray.forEach(function(item){
+          var title = group === 'landmark' ? (item.titleVi || item.title) : item.name;
+          var typeBadge = item.type ? '<span class="badge">' + item.type + '</span>' : '';
+          var addressMeta = item.address ? '<span>' + item.address + '</span>' : '';
+          var hoursMeta = item.hours ? '<span>' + item.hours + '</span>' : '';
+          var div = document.createElement('div');
+          div.className = 'list-item';
+          div.setAttribute('data-id', item.id);
+          div.innerHTML = '<div class="item-title">' + (title || '') + '</div>' +
+                          '<div class="item-meta">' + typeBadge + addressMeta + (addressMeta && hoursMeta ? ' · ' : '') + hoursMeta + '</div>';
+          div.addEventListener('click', function(){
+            highlightListItemById(item.id);
+            var ref = markerById.get(item.id);
+            if (ref && ref.marker) {
+              // Ensure correct group markers are visible when clicking list
+              showOnlyGroupMarkers(group);
+              // Trigger marker click to pan/zoom/open infowindow and draw route
+              google.maps.event.trigger(ref.marker, 'click');
+            }
+          });
+          listEl.appendChild(div);
+        });
+      }
+
+      function highlightListItemById(id) {
+        document.querySelectorAll('.category-list .list-item').forEach(function(el){ el.classList.remove('active'); });
+        var target = document.querySelector('.category-list .list-item[data-id="' + id + '"]');
+        if (target) target.classList.add('active');
+      }
+
       // Function to initialize Places Autocomplete
       function initializePlacesSearch(map) {
         console.log('🔍 Initializing Places Autocomplete...');
         
-        // Get the search input element
         var searchInput = document.getElementById('pac-input');
         if (!searchInput) {
           console.error('❌ Search input element not found!');
           return;
         }
         
-        // Create Autocomplete instance
         var autocomplete = new google.maps.places.Autocomplete(searchInput, {
-          // Bias results to Vietnam and Gia Lai region
           componentRestrictions: { country: 'vn' },
           fields: ['geometry', 'name', 'formatted_address', 'place_id'],
           types: ['establishment', 'geocode']
         });
         
-        // Bias autocomplete results towards map's viewport
         autocomplete.bindTo('bounds', map);
         
-        // Create a marker for search results (initially hidden)
         var searchMarker = new google.maps.Marker({
-          map: null, // Don't show on map yet
+          map: null,
           anchorPoint: new google.maps.Point(0, -29),
           icon: {
             url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
@@ -441,10 +699,8 @@ const locationsData = locations.map(location => ({
           }
         });
         
-        // Create InfoWindow for search result
         var searchInfoWindow = new google.maps.InfoWindow();
         
-        // Listen for place selection
         autocomplete.addListener('place_changed', function() {
           searchInfoWindow.close();
           searchMarker.setVisible(false);
@@ -456,22 +712,16 @@ const locationsData = locations.map(location => ({
             return;
           }
           
-          console.log('✅ Place selected: ' + place.name);
-          
-          // If the place has a viewport, fit the map to it
           if (place.geometry.viewport) {
             map.fitBounds(place.geometry.viewport);
           } else {
-            // Otherwise, center and zoom to the location
             map.setCenter(place.geometry.location);
             map.setZoom(17);
           }
           
-          // Position and show the search marker
           searchMarker.setPosition(place.geometry.location);
           searchMarker.setMap(map);
           
-          // Create content for InfoWindow
           var infoContent = '<div class="custom-infowindow">';
           infoContent += '<div class="custom-infowindow-content">';
           infoContent += '<h3 class="custom-infowindow-title">' + place.name + '</h3>';
@@ -484,13 +734,11 @@ const locationsData = locations.map(location => ({
           searchInfoWindow.setContent(infoContent);
           searchInfoWindow.open(map, searchMarker);
           
-          // Close any existing location InfoWindows
           if (currentInfoWindow) {
             currentInfoWindow.close();
             currentInfoWindow = null;
           }
           
-          // Calculate and display route to this searched location
           calculateAndDisplayRoute(place.geometry.location);
         });
         
@@ -507,16 +755,12 @@ const locationsData = locations.map(location => ({
         }
         
         navigator.geolocation.getCurrentPosition(
-          // Success callback
           function(position) {
             userLocation = {
               lat: position.coords.latitude,
               lng: position.coords.longitude
             };
             
-            console.log('✅ User location obtained:', userLocation);
-            
-            // Create a marker for user location
             if (userLocationMarker) {
               userLocationMarker.setMap(null);
             }
@@ -536,7 +780,6 @@ const locationsData = locations.map(location => ({
               zIndex: 999
             });
             
-            // Add pulse animation effect
             var pulseCircle = new google.maps.Circle({
               map: map,
               center: userLocation,
@@ -547,7 +790,6 @@ const locationsData = locations.map(location => ({
               fillOpacity: 0.3
             });
             
-            // Optional: Animate the pulse
             var radius = 30;
             var opacity = 0.3;
             setInterval(function() {
@@ -561,13 +803,10 @@ const locationsData = locations.map(location => ({
               pulseCircle.setOptions({ fillOpacity: Math.max(0, opacity) });
             }, 50);
           },
-          // Error callback
           function(error) {
             console.warn('❌ Location permission denied or error:', error.message);
             userLocation = null;
-            // User denied permission - Directions won't work but map continues normally
           },
-          // Options
           {
             enableHighAccuracy: true,
             timeout: 10000,
@@ -578,46 +817,29 @@ const locationsData = locations.map(location => ({
       
       // Function to calculate and display route
       function calculateAndDisplayRoute(destination) {
-        console.log('🦭 Calculating route to:', destination);
-        
-        // Check if user location is available
         if (!userLocation) {
           console.log('⚠️ User location not available. Cannot calculate route.');
-          return; // "Nếu No thì giữ nguyên"
+          return;
         }
         
-        // Check if directions services are initialized
         if (!directionsService || !directionsRenderer) {
           console.error('❌ Directions services not initialized!');
           return;
         }
         
-        // Prepare the directions request
         var request = {
           origin: userLocation,
           destination: destination,
           travelMode: google.maps.TravelMode.DRIVING,
           unitSystem: google.maps.UnitSystem.METRIC,
-          language: 'vi' // Use Vietnamese for directions text
+          language: 'vi'
         };
         
-        // Call the Directions Service
         directionsService.route(request, function(result, status) {
           if (status === 'OK') {
-            console.log('✅ Route calculated successfully!');
-            
-            // Display the route on the map
             directionsRenderer.setDirections(result);
-            
-            // Get route information
             var route = result.routes[0];
             var leg = route.legs[0];
-            
-            // Log route details
-            console.log('📏 Distance:', leg.distance.text);
-            console.log('⏱️ Duration:', leg.duration.text);
-            
-            // Optional: Show route info in a toast/alert
             showRouteInfo(leg.distance.text, leg.duration.text);
           } else {
             console.error('❌ Directions request failed:', status);
@@ -630,11 +852,8 @@ const locationsData = locations.map(location => ({
       
       // Helper function to show route information
       function showRouteInfo(distance, duration) {
-        // Create a simple info overlay
         var existingInfo = document.getElementById('route-info-overlay');
-        if (existingInfo) {
-          existingInfo.remove();
-        }
+        if (existingInfo) { existingInfo.remove(); }
         
         var infoDiv = document.createElement('div');
         infoDiv.id = 'route-info-overlay';
@@ -679,7 +898,6 @@ const locationsData = locations.map(location => ({
         
         document.querySelector('.map-container').appendChild(infoDiv);
         
-        // Auto-hide after 10 seconds
         setTimeout(function() {
           if (document.getElementById('route-info-overlay')) {
             document.getElementById('route-info-overlay').remove();
@@ -695,8 +913,6 @@ const locationsData = locations.map(location => ({
           console.error('❌ PUBLIC_GOOGLE_MAPS_API_KEY is missing. Check your .env file.');
           return;
         }
-        
-        console.log('📦 Loading Google Maps API script...');
         
         var script = document.createElement('script');
         script.async = true;
@@ -715,7 +931,6 @@ const locationsData = locations.map(location => ({
       }
     }
     
-    // Start loading when DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', loadGoogleMaps);
     } else {

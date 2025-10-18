@@ -21,7 +21,6 @@ const site: SiteData = {
     "Khám phá Tây Nguyên: lịch sử, văn hoá, danh thắng, ẩm thực và hơi thở của Gia Lai.",
   nav: [
     { href: "/", titleEn: "Home", titleVi: "Trang chủ" },
-    { href: "/history", titleEn: "History", titleVi: "Lịch sử" },
     { href: "/culture", titleEn: "Culture", titleVi: "Văn hoá" },
     { href: "/attractions", titleEn: "Attractions", titleVi: "Danh thắng" },
     { href: "/food", titleEn: "Food", titleVi: "Ẩm thực" },
