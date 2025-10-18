@@ -1,0 +1,34 @@
+{
+  "hotels": [
+    {
+      "name": "XOM Organic Farm Stay",
+      "address": "Thôn 5, TP. Pleiku",
+      "phone": "",
+      "description": "Trang trại hữu cơ, homestay sang trọng. Giá: 550k/đêm.",
+      "hours": "24/7",
+      "lng": 108.02,
+      "lat": 13.99,
+      "type": "Homestay"
+    },
+    {
+      "name": "J'rai Homestay",
+      "address": "369 Lê Duẩn, TP. Pleiku",
+      "phone": "088 880 37 47",
+      "description": "3 tầng, view hồ nước. Giá: 600k/đêm.",
+      "hours": "24/7",
+      "lng": 108.0092,
+      "lat": 13.9815,
+      "type": "Homestay"
+    },
+    {
+      "name": "Pleiku Highlands Boutique Hotel",
+      "address": "157 Thống Nhất, P. Ia Kring, TP. Pleiku",
+      "phone": "0269 3828 888",
+      "description": "Khách sạn boutique sang trọng. Rating: 4.7/5.",
+      "hours": "24/7",
+      "lng": 107.999573,
+      "lat": 13.970430,
+      "type": "Khách Sạn"
+     }
+  ]
+}

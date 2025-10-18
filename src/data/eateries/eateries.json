@@ -1,0 +1,166 @@
+{
+  "cafes": [
+    {
+      "name": "King Coffee",
+      "address": "2 Lê Lợi, P. Hội Thương, TP. Pleiku",
+      "phone": "0269 3717 868",
+      "description": "Chuỗi cà phê King Coffee, không gian sang trọng. Rating: 4.8/5. Giá: 15-50k.",
+      "hours": "Mở cả ngày",
+      "lng": 108.0039,
+      "lat": 13.9785
+    },
+    {
+      "name": "V7 Coffee",
+      "address": "Hẻm 3/73 Nguyễn Thiếp, P. Diên Hồng, TP. Pleiku",
+      "phone": "0905 827 875",
+      "description": "Vintage sân vườn xanh mướt, không gian mộc mạc.",
+      "hours": "7:00 - 22:00",
+      "lng": 108.0011,
+      "lat": 13.9718
+    },
+    {
+      "name": "Sapa Coffee",
+      "address": "33 Hùng Vương, P. Diên Hồng, TP. Pleiku",
+      "phone": "0333 311 800",
+      "description": "Phong cách riêng trong pha chế.",
+      "hours": "",
+      "lng": 108.0025,
+      "lat": 13.9751
+    },
+    {
+      "name": "Tiệm Cafe Ngày Bình Yên",
+      "address": "109 Tô Vĩnh Diện, P. Hoa Lư, TP. Pleiku",
+      "phone": "0979 220 112",
+      "description": "View núi đồi cực chill, vintage. Rating: 4.7/5.",
+      "hours": "6:30 - 22:00",
+      "lng": 107.9998,
+      "lat": 13.9802
+    },
+    {
+      "name": "KAP Bistro",
+      "address": "46 Hùng Vương, TP. Pleiku",
+      "phone": "0947 004 008",
+      "description": "Phong cách hoàng gia châu Âu. Rating: 4.3/5.",
+      "hours": "6:00 - 22:00",
+      "lng": 108.0021,
+      "lat": 13.9755
+    },
+    {
+      "name": "Java Coffee",
+      "address": "170 Nguyễn Tất Thành, TP. Pleiku",
+      "phone": "0966 240 180",
+      "description": "Không gian hiện đại, menu đa dạng.",
+      "hours": "6:00 - 22:00",
+      "lng": 108.0089,
+      "lat": 13.9821
+    },
+    {
+      "name": "Maya Café",
+      "address": "98 Sư Vạn Hạnh, P. Hội Thương, TP. Pleiku",
+      "phone": "0269 382 7889",
+      "description": "Không gian xanh mát, hồ nước nhỏ. Rating: 4.1/5. Giá: 20-40k.",
+      "hours": "7:30 - 21:30",
+      "lng": 108.0033,
+      "lat": 13.9767
+    },
+    {
+      "name": "Park Ha Cafe & Cake",
+      "address": "69 Tạ Quang Bửu, TP. Pleiku",
+      "phone": "",
+      "description": "Cafe và bánh ngọt, diện tích 130m².",
+      "hours": "",
+      "lng": 108.0044,
+      "lat": 13.9777
+    },
+    {
+      "name": "Cầu Treo Coffee",
+      "address": "240 Tôn Đức Thắng, Biển Hồ, TP. Pleiku",
+      "phone": "088 817 77 79",
+      "description": "View Biển Hồ đẹp.",
+      "hours": "",
+      "lng": 108.0167,
+      "lat": 13.9833
+    },
+    {
+      "name": "Phía Sau Nhà Cafe",
+      "address": "148 Tô Vĩnh Diện, P. Hoa Lư, TP. Pleiku",
+      "phone": "0949 235 168",
+      "description": "Không gian ấm cúng.",
+      "hours": "8:00 - 22:00",
+      "lng": 107.9995,
+      "lat": 13.981
+    }
+  ],
+  "restaurants": [
+    {
+      "name": "Kichi Kichi Kim Center",
+      "address": "TTTM Nguyễn Kim, 53 Quang Trung, P. Hội Thương, TP. Pleiku",
+      "phone": "0269 730 0323",
+      "description": "Lẩu băng chuyền buffet. Rating: 4.9/5. Giá: 199-300k.",
+      "hours": "10:00 - 22:00",
+      "lng": 108.0051,
+      "lat": 13.9798,
+      "type": "Lẩu Buffet"
+    },
+    {
+      "name": "Cơm Niêu Ngon 3 Miền",
+      "address": "158 Hai Bà Trưng, P. Yên Đỗ, TP. Pleiku",
+      "phone": "0269 3828 811",
+      "description": "Cơm niêu 3 miền. Rating: 4.1/5. Giá: 150-200k.",
+      "hours": "9:00 - 22:30",
+      "lng": 107.9942,
+      "lat": 13.9772,
+      "type": "Cơm Niêu"
+    },
+    {
+      "name": "GoGi House Kim Center",
+      "address": "TTTM Nguyễn Kim, 53 Quang Trung, P. Tây Sơn, TP. Pleiku",
+      "phone": "0269 7300 339",
+      "description": "Nướng Hàn Quốc buffet. Rating: 4.8/5. Giá: 299k.",
+      "hours": "10:00 - 22:00",
+      "lng": 108.0051,
+      "lat": 13.9798,
+      "type": "Nướng Hàn Quốc"
+    },
+    {
+      "name": "Bún Phương",
+      "address": "46 Nguyễn Thái Học, P. Hội Thương, TP. Pleiku",
+      "phone": "0269 382 1472",
+      "description": "Bún thịt nướng gia truyền 20+ năm. Rating: 4.2/5. Giá: 18-65k.",
+      "hours": "10:30 - 20:20",
+      "lng": 108.0048,
+      "lat": 13.9793,
+      "type": "Bún"
+    },
+    {
+      "name": "Phở Hồng",
+      "address": "22-24 Nguyễn Văn Trỗi, P. Hội Thương, TP. Pleiku",
+      "phone": "",
+      "description": "Phở khô Gia Lai (phở hai tô). Giá: 25-40k.",
+      "hours": "5:00 - 14:00",
+      "lng": 108.0016,
+      "lat": 13.9788,
+      "type": "Phở"
+    },
+    {
+      "name": "Cơm Gà Bà Hòa",
+      "address": "31 Nguyễn Văn Trỗi, P. Hội Thương, TP. Pleiku",
+      "phone": "093 578 98 90",
+      "description": "Cơm gà rang gia truyền 30+ năm. Giá: 40-90k.",
+      "hours": "",
+      "lng": 108.0019,
+      "lat": 13.979,
+      "type": "Cơm Gà"
+    },
+    {
+      "name": "Lẩu Nhỏ 1975",
+      "address": "76 Đường Wừu, P. Diên Hồng, TP. Pleiku",
+      "phone": "090 500 51 79",
+      "description": "Lẩu đặc sản. Rating: 4.1/5. Giá: 99-370k.",
+      "hours": "8:00 - 22:00",
+      "lng": 108.0005,
+      "lat": 13.9725,
+      "type": "Lẩu"
+    }
+  ]
+}

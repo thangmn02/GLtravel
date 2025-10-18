@@ -7,7 +7,8 @@ const cards = [
     descEn: '3D view, GPS, and rich details of Gia Lai.',
     descVi: 'Góc nhìn 3D, GPS và thông tin phong phú về Gia Lai.',
     size: 'lg',
-    icon: 'map'
+    icon: 'map',
+    delay: '0'
   },
   {
     href: '/coffee-journey',
@@ -16,7 +17,8 @@ const cards = [
     descEn: 'From basalt soil to aromatic cups.',
     descVi: 'Từ đất bazan đến những tách cà phê thơm lừng.',
     size: 'wide',
-    icon: 'coffee'
+    icon: 'coffee',
+    delay: '50'
   },
   {
     href: '/culture',
@@ -25,7 +27,8 @@ const cards = [
     descEn: 'UNESCO heritage of the Highlands.',
     descVi: 'Di sản UNESCO của Tây Nguyên.',
     size: 'square',
-    icon: 'gong'
+    icon: 'gong',
+    delay: '100'
   },
   {
     href: '/food',
@@ -34,14 +37,66 @@ const cards = [
     descEn: 'Authentic flavors of Gia Lai.',
     descVi: 'Hương vị bản địa đậm đà.',
     size: 'square',
-    icon: 'food'
+    icon: 'food',
+    delay: '150'
   }
 ];
 ---
-<section class="bento" aria-label="Key site sections" data-animate>
+<section class="bento" aria-label="Key site sections">
   <div class="grid">
-    {cards.map((c) => (
-      <a class={['card', c.size].join(' ')} href={c.href} aria-label={`${c.titleEn} / ${c.titleVi}`}>
+    {cards.map((c, i) => (
+      <a 
+        class={['card', c.size, 'scroll-fade'].join(' ')} 
+        href={c.href} 
+        aria-label={`${c.titleEn} / ${c.titleVi}`}
+        style={`--delay: ${c.delay}ms`}
+      >
+        {/* Doodle background SVGs */}
+        <div class="doodle" aria-hidden="true">
+          {c.icon === 'map' && (
+            <svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.06">
+              <path d="M10 80 Q30 40 50 60 T90 50 Q100 45 110 55" stroke-linecap="round"/>
+              <path d="M20 70 L25 65 L30 68 L35 62" stroke-linecap="round"/>
+              <path d="M60 75 Q70 65 80 70" stroke-linecap="round"/>
+              <circle cx="45" cy="35" r="3" />
+            </svg>
+          )}
+          {c.icon === 'coffee' && (
+            <svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.06">
+              <path d="M40 30 Q60 20 70 35 Q75 50 65 65 Q55 75 40 70 Q25 60 30 45 Q35 35 40 30" stroke-linecap="round"/>
+              <path d="M50 45 Q55 48 52 55" stroke-linecap="round"/>
+              <path d="M75 80 Q80 85 85 80" stroke-linecap="round" stroke-dasharray="2 3"/>
+              <path d="M70 85 Q73 90 78 88" stroke-linecap="round" stroke-dasharray="2 3"/>
+              <path d="M80 90 Q82 95 87 93" stroke-linecap="round" stroke-dasharray="2 3"/>
+            </svg>
+          )}
+          {c.icon === 'gong' && (
+            <svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.06">
+              <circle cx="60" cy="60" r="35" stroke-dasharray="3 2"/>
+              <circle cx="60" cy="60" r="25" />
+              <circle cx="60" cy="60" r="15" stroke-dasharray="2 3"/>
+              <circle cx="60" cy="60" r="5" />
+              <path d="M20 20 Q25 15 30 20" stroke-linecap="round"/>
+              <path d="M90 20 Q95 15 100 20" stroke-linecap="round"/>
+              <path d="M20 100 Q25 95 30 100" stroke-linecap="round"/>
+              <path d="M90 100 Q95 95 100 100" stroke-linecap="round"/>
+            </svg>
+          )}
+          {c.icon === 'food' && (
+            <svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.06">
+              <ellipse cx="60" cy="70" rx="30" ry="12" />
+              <path d="M30 70 Q30 85 60 85 Q90 85 90 70" stroke-linecap="round"/>
+              <path d="M45 55 Q45 45 47 35" stroke-linecap="round" stroke-dasharray="2 2"/>
+              <path d="M60 55 Q60 45 60 35" stroke-linecap="round" stroke-dasharray="2 2"/>
+              <path d="M75 55 Q75 45 73 35" stroke-linecap="round" stroke-dasharray="2 2"/>
+              <circle cx="47" cy="32" r="2"/>
+              <circle cx="60" cy="30" r="2"/>
+              <circle cx="73" cy="32" r="2"/>
+            </svg>
+          )}
+        </div>
+        
+        {/* Main icon */}
         <div class="icon" aria-hidden="true" role="img">
           {c.icon === 'map' && (
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2V6z"/><path d="M9 4v14M15 6v14"/></svg>
@@ -56,6 +111,7 @@ const cards = [
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 3v8a4 4 0 0 0 8 0V3"/><path d="M12 7h8v5a4 4 0 0 1-4 4h-4"/></svg>
           )}
         </div>
+        
         <div class="txt">
           <h3>
             <span data-lang="en">{c.titleEn}</span>
@@ -72,71 +128,183 @@ const cards = [
 </section>
 
 <style>
-  .bento { padding: 36px 16px; }
+  .bento { 
+    padding: 48px 16px 64px; 
+    perspective: 1000px;
+  }
   .grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     grid-auto-rows: 120px;
-    gap: 16px;
+    gap: 20px;
     max-width: 1200px;
     margin: 0 auto;
   }
+  
   .card {
     position: relative;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    padding: 16px;
+    padding: 20px;
     border-radius: 16px;
-    background: rgba(255,255,255,0.75);
-    border: 1px solid rgba(0,0,0,0.06);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+    background: #FFFFFF;
+    border: 1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 4px 24px rgba(0,0,0,0.06);
     overflow: hidden;
-    color: #111;
-    transition: transform .25s ease, box-shadow .25s ease;
+    color: #2C3E50;
+    text-decoration: none;
+    transition: transform .3s cubic-bezier(.4,0,.2,1), 
+                box-shadow .3s cubic-bezier(.4,0,.2,1);
+    transform-style: preserve-3d;
   }
-  .card::before {
-    content: '';
-    position: absolute; inset: -20% -20% auto auto; width: 60%; height: 60%;
-    background: radial-gradient( circle at 30% 30%, rgba(255, 225, 140, 0.5), rgba(255, 225, 140, 0) 60% ),
-                radial-gradient( circle at 70% 70%, rgba(160, 205, 255, 0.35), rgba(160, 205, 255, 0) 60% );
-    filter: blur(20px);
+  
+  /* Hover effect with orange glow */
+  .card:hover { 
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08), 
+                0 8px 32px rgba(0,0,0,0.12),
+                0 0 0 1px rgba(255,107,53,0.2),
+                0 12px 48px rgba(255,107,53,0.15);
+  }
+  
+  .card:focus-visible { 
+    outline: 2px solid #FF6B35; 
+    outline-offset: 2px; 
+  }
+  
+  /* Doodle background */
+  .doodle {
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    width: 100px;
+    height: 100px;
+    z-index: 0;
     pointer-events: none;
+    color: #FF6B35;
+    opacity: 0.8;
+    transform: rotate(-5deg);
   }
-  .card:hover { transform: translateY(-4px); box-shadow: 0 14px 40px rgba(0,0,0,0.10); }
-  .card:focus-visible { outline: 3px solid #111; outline-offset: 2px; }
-  .card .icon { color: #6b7280; position: absolute; top: 14px; left: 14px; }
-  .card .txt h3 { margin: 0 0 6px; font-weight: 800; font-size: 1.1rem; }
-  .card .txt p { margin: 0; color: #444; font-size: .95rem; }
+  
+  .card.lg .doodle { width: 140px; height: 140px; }
+  .card.wide .doodle { width: 110px; height: 110px; }
+  
+  /* Main icon */
+  .card .icon { 
+    position: absolute; 
+    top: 18px; 
+    left: 20px;
+    color: #FF6B35;
+    z-index: 1;
+  }
+  
+  /* Text content */
+  .card .txt { 
+    position: relative; 
+    z-index: 1; 
+  }
+  .card .txt h3 { 
+    margin: 0 0 8px; 
+    font-weight: 800; 
+    font-size: 1.15rem; 
+    line-height: 1.2;
+    color: #2C3E50;
+  }
+  .card .txt p { 
+    margin: 0; 
+    color: rgba(44,62,80,0.75); 
+    font-size: .95rem;
+    line-height: 1.4;
+  }
 
-  /* sizes: lg 2x2, wide 2x1, square 1x1 */
-  .card.lg { grid-column: span 4; grid-row: span 4; }
+  /* Card sizes */
+  .card.lg { grid-column: span 4; grid-row: span 4; padding: 24px; }
   .card.wide { grid-column: span 4; grid-row: span 2; }
   .card.square { grid-column: span 2; grid-row: span 2; }
+  
+  .card.lg .txt h3 { font-size: 1.35rem; }
+  .card.lg .txt p { font-size: 1rem; }
 
+  /* Scroll animations */
+  .scroll-fade {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  .scroll-fade.in-view {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.6s cubic-bezier(.22,1,.36,1), 
+                transform 0.6s cubic-bezier(.22,1,.36,1);
+    transition-delay: var(--delay, 0ms);
+  }
+  
+  /* Responsive */
   @media (max-width: 1024px) {
     .grid { grid-template-columns: repeat(4, 1fr); }
     .card.lg { grid-column: span 4; grid-row: span 4; }
     .card.wide { grid-column: span 4; grid-row: span 2; }
     .card.square { grid-column: span 2; grid-row: span 2; }
   }
+  
   @media (max-width: 640px) {
-    .grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 140px; }
+    .grid { 
+      grid-template-columns: repeat(2, 1fr); 
+      grid-auto-rows: 140px;
+      gap: 16px;
+    }
     .card.lg { grid-column: span 2; grid-row: span 3; }
     .card.wide { grid-column: span 2; grid-row: span 2; }
     .card.square { grid-column: span 1; grid-row: span 1; }
+    .doodle { width: 80px; height: 80px; }
+    .card.lg .doodle { width: 110px; height: 110px; }
   }
-
-  /* Hover glowing border using outline gradient */
-  .card { --glow: radial-gradient( circle at 50% 50%, rgba(255,186,73,0.7), rgba(255,186,73,0) 60% ),
-                 radial-gradient( circle at 70% 30%, rgba(158,203,255,0.7), rgba(158,203,255,0) 60% ); }
-  .card::after {
-    content: '';
-    position: absolute; inset: 0; border-radius: 16px; padding: 1px;
-    background: linear-gradient( to bottom right, rgba(255,186,73,0.6), rgba(158,203,255,0.6) );
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-    opacity: 0; transition: opacity .25s ease;
+  
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-fade { 
+      opacity: 1; 
+      transform: none; 
+    }
+    .card {
+      transition: none;
+    }
   }
-  .card:hover::after { opacity: 1; }
 </style>
+
+<script is:inline>
+  (function() {
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px 0px -10% 0px',
+      threshold: 0.1
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+    
+    // Wait for DOM ready
+    function init() {
+      const cards = document.querySelectorAll('.bento .scroll-fade');
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      
+      if (prefersReduced || !('IntersectionObserver' in window)) {
+        cards.forEach(card => card.classList.add('in-view'));
+      } else {
+        cards.forEach(card => observer.observe(card));
+      }
+    }
+    
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>

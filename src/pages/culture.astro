@@ -2,31 +2,107 @@
 import ContentLayout from '../layouts/ContentLayout.astro';
 import site from '../data/site';
 ---
-<ContentLayout title={`Culture — ${site.titleEn}`}>
+<ContentLayout title={`Văn hóa — ${site.titleVi}`}>
   <h1>
+    <span data-lang="vi">Văn hóa</span>
     <span data-lang="en">Culture</span>
-    <span data-lang="vi">Văn hoá</span>
   </h1>
-  <p>
-    <span data-lang="en">Describe festivals, arts, music, languages, and customs here.</span>
-    <span data-lang="vi">Mô tả các lễ hội, nghệ thuật, âm nhạc, ngôn ngữ và phong tục tại đây.</span>
-  </p>
-  <h2>
-    <span data-lang="en">Highlights</span>
-    <span data-lang="vi">Nổi bật</span>
-  </h2>
-  <ul>
-    <li>
-      <span data-lang="en">Major festivals and public holidays</span>
-      <span data-lang="vi">Lễ hội lớn và ngày nghỉ</span>
-    </li>
-    <li>
-      <span data-lang="en">Traditional arts and crafts</span>
-      <span data-lang="vi">Nghệ thuật và thủ công truyền thống</span>
-    </li>
-    <li>
-      <span data-lang="en">Local music and dance</span>
-      <span data-lang="vi">Âm nhạc và vũ điệu bản địa</span>
-    </li>
-  </ul>
+
+  <div class="with-toc">
+    <div class="content">
+      <!-- Lịch sử Gia Lai -->
+      <h2 id="lich-su-gia-lai">Lịch sử Gia Lai</h2>
+      <h3 id="nguon-goc-va-phat-trien">Nguồn gốc và phát triển</h3>
+      <p>
+        <span data-lang="vi">Cội nguồn cư trú lâu đời của các tộc người bản địa hình thành nên diện mạo văn hóa Tây Nguyên. Các làng (plei) phát triển dọc theo dòng suối, nương rẫy trên đất bazan đã tạo nên nhịp sống nông nghiệp rẫy và mối liên kết cộng đồng bền chặt.</span>
+        <span data-lang="en">Indigenous communities formed early settlements across the basalt plateaus. Villages grew along streams and shifting cultivation shaped a communal rhythm of life in the Central Highlands.</span>
+      </p>
+
+      <h3 id="thoi-ky-khang-chien">Thời kỳ kháng chiến</h3>
+      <p>
+        <span data-lang="vi">Trong thời kỳ thuộc địa và kháng chiến, Gia Lai là địa bàn chiến lược, nơi giao thoa giữa các tuyến hậu cần và phong trào đấu tranh của đồng bào các dân tộc. Di sản ký ức về tinh thần đoàn kết vẫn còn in đậm trong lễ hội và không gian sinh hoạt cộng đồng ngày nay.</span>
+        <span data-lang="en">During the colonial and resistance periods, Gia Lai played a strategic role. The solidarity of multi-ethnic communities remains visible in today’s festivals and communal spaces.</span>
+      </p>
+
+      <h3 id="nhan-vat-lich-su">Nhân vật lịch sử</h3>
+      <ul>
+        <li>
+          <span data-lang="vi">Những già làng, nghệ nhân cồng chiêng và các nhà hoạt động địa phương giữ vai trò kết nối cộng đồng qua nhiều thế hệ.</span>
+          <span data-lang="en">Village elders, gong artisans, and local activists have long served as cultural anchors for their communities.</span>
+        </li>
+        <li>
+          <span data-lang="vi">Các cột mốc về giao thông, đô thị và giáo dục sau 1975 đánh dấu bước phát triển mới của tỉnh.</span>
+          <span data-lang="en">Post-1975 milestones in infrastructure, urbanization, and education marked new phases of growth.</span>
+        </li>
+      </ul>
+
+      <!-- Văn hóa truyền thống -->
+      <h2 id="van-hoa-truyen-thong">Văn hóa truyền thống</h2>
+      <h3 id="le-hoi-nghe-thuat">Lễ hội &amp; nghệ thuật (Cồng chiêng)</h3>
+      <p>
+        <span data-lang="vi">Không gian cồng chiêng là linh hồn của nhiều lễ hội: mừng lúa mới, bỏ mả, cưới hỏi... Tiếng chiêng, điệu xoang và nhà rông là biểu tượng kết nối giữa con người với đất trời.</span>
+        <span data-lang="en">Gong culture animates major festivals—from new rice celebrations to funeral and wedding rites—where gongs, xoang dances, and the communal longhouse bind people to the land and the cosmos.</span>
+      </p>
+
+      <h3 id="ngon-ngu-chu-viet">Ngôn ngữ &amp; chữ viết</h3>
+      <p>
+        <span data-lang="vi">Các nhóm ngôn ngữ Bahnaric và Jrai với kho tàng truyện kể, sử thi, và dân ca phong phú. Chữ quốc ngữ và chữ dân tộc cùng được gìn giữ trong giáo dục cộng đồng.</span>
+        <span data-lang="en">Bahnaric and Jrai languages preserve epics, folktales, and songs. Both the national script and ethnic scripts are actively maintained through community education.</span>
+      </p>
+
+      <h3 id="trang-phuc-dan-toc">Trang phục dân tộc</h3>
+      <p>
+        <span data-lang="vi">Trang phục dệt thổ cẩm với hoa văn hình học, màu chàm – đỏ – trắng đặc trưng thể hiện bản sắc tộc người và vai trò trong lễ nghi.</span>
+        <span data-lang="en">Handwoven textiles feature geometric motifs with indigo, red, and white palettes—identity markers often reserved for rituals and festive events.</span>
+      </p>
+
+      <!-- Di sản UNESCO -->
+      <h2 id="di-san-unesco">Di sản UNESCO</h2>
+      <p>
+        <span data-lang="vi">Không gian văn hóa Cồng chiêng Tây Nguyên được UNESCO công nhận là Kiệt tác di sản truyền khẩu và phi vật thể của nhân loại (2005), khẳng định giá trị độc đáo của đời sống tinh thần nơi đây.</span>
+        <span data-lang="en">The Space of Gong Culture in the Central Highlands was recognized by UNESCO in 2005, affirming its universal value as a living, intangible heritage.</span>
+      </p>
+    </div>
+
+    <aside class="toc" aria-label="Mục lục">
+      <strong>Mục lục</strong>
+      <nav>
+        <a href="#lich-su-gia-lai">Lịch sử Gia Lai</a>
+        <a href="#van-hoa-truyen-thong">Văn hóa truyền thống</a>
+        <a href="#di-san-unesco">Di sản UNESCO</a>
+      </nav>
+    </aside>
+  </div>
+
+  <style>
+    :global(html) { scroll-behavior: smooth; }
+    .with-toc { display: grid; grid-template-columns: minmax(0,1fr) 260px; gap: 24px; }
+    .content { min-width: 0; }
+    .toc { position: sticky; top: 96px; align-self: start; background: rgba(255,255,255,0.85); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 12px; box-shadow: 0 10px 24px rgba(0,0,0,0.06); }
+    .toc nav { display: grid; gap: 4px; margin-top: 8px; }
+    .toc a { display: block; padding: 8px 10px; border-radius: 8px; color: #2C3E50; text-decoration: none; }
+    .toc a:hover, .toc a.active { background: rgba(255,107,53,0.12); color: #FF6B35; }
+
+    @media (max-width: 980px) {
+      .with-toc { grid-template-columns: 1fr; }
+      .toc { position: static; order: -1; }
+    }
+  </style>
+
+  <script is:inline>
+    (function(){
+      // Highlight active TOC link while scrolling
+      const links = Array.from(document.querySelectorAll('.toc a'));
+      const sections = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const id = '#' + entry.target.id;
+            links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === id));
+          }
+        });
+      }, { rootMargin: '0px 0px -60% 0px', threshold: 0.1 });
+      sections.forEach(sec => observer.observe(sec));
+    })();
+  </script>
 </ContentLayout>

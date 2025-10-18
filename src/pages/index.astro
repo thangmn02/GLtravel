@@ -4,9 +4,8 @@ import site from '../data/site';
 import BentoGrid from '../components/BentoGrid.astro';
 ---
 <LandingLayout title={`${site.titleEn} — Home`}>
-  <section class="hero-aurora" aria-label="Intro" data-animate>
-    <div class="aurora-layer"></div>
-    <div class="aurora-layer two"></div>
+  <section class="hero-image" aria-label="Intro" data-animate>
+    <div class="hero-overlay" aria-hidden="true"></div>
     <div class="hero-inner">
       <h1 class="headline">
         <span data-lang="vi">Gia Lai: Chạm vào nhịp đập Đại ngàn.</span>
@@ -17,12 +16,12 @@ import BentoGrid from '../components/BentoGrid.astro';
         <span data-lang="en">Explore culture, nature, and local flavors through a modern, immersive interface.</span>
       </p>
       <div class="cta-row">
-        <a href="/map" class="cta" aria-label="Open Interactive Map">
+        <a href="/map" class="cta primary" aria-label="Open Interactive Map">
           <span data-lang="vi">Mở Bản đồ Tương tác</span>
           <span data-lang="en">Launch Interactive Map</span>
           <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-7-7l7 7-7 7" /></svg>
         </a>
-        <a href="#sections" class="ghost" aria-label="Scroll to sections">
+        <a href="#sections" class="cta ghost" aria-label="Scroll to sections">
           <span data-lang="vi">Xem các mục</span>
           <span data-lang="en">Browse sections</span>
         </a>
@@ -35,42 +34,76 @@ import BentoGrid from '../components/BentoGrid.astro';
   </div>
 
   <style>
-    .hero-aurora {
+    .hero-image {
       position: relative;
-      padding: 96px 16px 48px;
-      overflow: hidden;
       isolation: isolate;
-      max-width: 1200px; margin: 0 auto;
+      min-height: 76svh;
+      padding: 120px 16px 72px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #2C3E50;
+      background-image: url('/images/hero/hero-background.jpg');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
     }
-    .hero-inner { position: relative; z-index: 2; text-align: center; }
-    .headline { margin: 0 0 12px; font-weight: 800; font-size: clamp(2rem, 4vw, 3.2rem); color: #111; }
-    .subhead { margin: 0 auto 20px; max-width: 60ch; color: #333; font-size: 1.05rem; }
+    .hero-overlay {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: saturate(130%) contrast(102%);
+      z-index: 1;
+    }
+    .hero-inner { position: relative; z-index: 2; max-width: 68rem; margin: 0 auto; }
+    .headline { margin: 0 0 12px; font-family: 'Manrope', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; font-weight: 800; letter-spacing: 0.01em; font-size: clamp(2rem, 4.6vw, 3.4rem); line-height: 1.12; color: #2C3E50; }
+    .subhead { margin: 0 auto 20px; max-width: 62ch; color: rgba(44,62,80,0.86); font-size: 1.05rem; }
     .cta-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-    .cta, .ghost { display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 999px; font-weight: 700; text-decoration: none; }
-    .cta { color: #111; background: #ffd777; box-shadow: 0 10px 30px rgba(255, 199, 94, 0.35); }
-    .cta:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(255, 199, 94, 0.45); }
-    .ghost { color: #111; background: rgba(0,0,0,0.06); }
-    .ghost:hover { background: rgba(0,0,0,0.1); }
-    .arrow { transition: transform .2s ease; }
+    .cta { display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 999px; font-weight: 800; text-decoration: none; transition: transform .15s ease, box-shadow .2s ease, background-color .2s ease, color .2s ease, border-color .2s ease; }
+    .cta .arrow { transition: transform .2s ease; }
     .cta:hover .arrow { transform: translateX(3px); }
 
-    /* Soft aurora background using conic/radial gradients */
-    .aurora-layer { position: absolute; inset: -20% -10% auto -10%; height: 120%; z-index: 1; filter: blur(48px) saturate(120%);
-      background: radial-gradient( 60% 60% at 30% 30%, rgba(255, 233, 160, 0.7), rgba(255,233,160,0) 60% ),
-                  radial-gradient( 50% 50% at 70% 70%, rgba(170, 210, 255, 0.6), rgba(170,210,255,0) 60% ),
-                  radial-gradient( 40% 40% at 80% 20%, rgba(200, 255, 232, 0.5), rgba(200,255,232,0) 60% );
-      animation: float1 28s linear infinite;
-      opacity: .6; /* increased readability */
-    }
-    .aurora-layer.two { inset: auto -10% -30% -10%; height: 100%;
-      background: radial-gradient( 60% 60% at 60% 40%, rgba(255, 210, 150, 0.5), rgba(255,210,150,0) 60% ),
-                  radial-gradient( 50% 50% at 20% 70%, rgba(170, 220, 255, 0.45), rgba(170,220,255,0) 60% );
-      animation: float2 34s linear infinite;
-      opacity: .55; /* increased readability */
-    }
-    @keyframes float1 { 0% { transform: translateX(0) translateY(0); } 50% { transform: translateX(-3%) translateY(2%); } 100% { transform: translateX(0) translateY(0); } }
-    @keyframes float2 { 0% { transform: translateX(0) translateY(0); } 50% { transform: translateX(2%) translateY(-2%); } 100% { transform: translateX(0) translateY(0); } }
+    .cta.primary { background: #FF6B35; color: #fff; border: 2px solid transparent; box-shadow: 0 12px 28px rgba(255, 107, 53, 0.35); }
+    .cta.primary:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(255, 107, 53, 0.45); }
 
-    @media (prefers-reduced-motion: reduce) { .aurora-layer, .aurora-layer.two { animation: none; } }
+    .cta.ghost { background: transparent; color: #FF6B35; border: 2px solid #FF6B35; }
+    .cta.ghost:hover { background: #FF6B35; color: #fff; }
+
+    @media (max-width: 520px) {
+      .cta-row { gap: 10px; }
+      .cta { width: 100%; justify-content: center; }
+    }
+
+    /* Parallax: simple CSS approach for capable devices */
+    @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+      .hero-image { background-attachment: fixed; }
+    }
   </style>
+
+  <script is:inline>
+    (function(){
+      const el = document.querySelector('.hero-image');
+      if (!el) return;
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      function enableJSParallax(){
+        let ticking = false;
+        const onScroll = () => {
+          if (ticking) return;
+          ticking = true;
+          requestAnimationFrame(() => {
+            const y = window.scrollY || window.pageYOffset || 0;
+            el.style.backgroundPosition = `center calc(50% + ${y * 0.15}px)`;
+            ticking = false;
+          });
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+      }
+      if (!reduce && window.innerWidth >= 768) {
+        // Some browsers ignore background-attachment: fixed on mobile; JS fallback
+        enableJSParallax();
+      }
+    })();
+  </script>
 </LandingLayout>
