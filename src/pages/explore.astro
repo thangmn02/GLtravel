@@ -1,0 +1,160 @@
+---
+import LandingLayout from '../layouts/LandingLayout.astro';
+import ExploreApp from '../components/ExploreApp.tsx';
+import eateries from '../data/eateries/eateries.json';
+import hotels from '../data/hotels/hotels.json';
+
+// Combine all locations
+const allLocations = [
+  ...eateries.cafes,
+  ...eateries.restaurants,
+  ...hotels.hotels
+];
+---
+
+<LandingLayout title="La bàn Đại Ngàn - Khám phá Gia Lai">
+  <div class="min-h-screen relative overflow-hidden">
+    <!-- Background with Highland atmosphere -->
+    <div class="absolute inset-0 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-100"></div>
+    <div class="absolute inset-0 opacity-10 bg-repeat" style="background-image: url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60\" height=\"60\" viewBox=\"0 0 60 60\"><g fill=\"%234A3728\" fill-opacity=\"0.1\"><circle cx=\"30\" cy=\"30\" r=\"2\"/><circle cx=\"10\" cy=\"10\" r=\"1\"/><circle cx=\"50\" cy=\"50\" r=\"1\"/></g></svg>');"></div>
+
+    <div class="relative z-10 w-full max-w-6xl mx-auto px-4 py-12">
+      <!-- Highland Compass Header -->
+      <div class="text-center mb-16">
+        <div class="inline-block mb-6">
+          <div class="relative">
+            <!-- Decorative compass rose background -->
+            <div class="absolute inset-0 opacity-20 transform rotate-12">
+              <svg width="120" height="120" viewBox="0 0 120 120" class="text-wood">
+                <path d="M60 10 L65 50 L60 55 L55 50 Z" fill="currentColor"/>
+                <path d="M110 60 L70 55 L65 60 L70 65 Z" fill="currentColor"/>
+                <path d="M60 110 L55 70 L60 65 L65 70 Z" fill="currentColor"/>
+                <path d="M10 60 L50 65 L55 60 L50 55 Z" fill="currentColor"/>
+                <circle cx="60" cy="60" r="4" fill="currentColor"/>
+              </svg>
+            </div>
+
+            <h1 class="relative text-4xl md:text-6xl font-bold text-wood mb-4 font-playfair">
+              🧭 La bàn Đại Ngàn
+            </h1>
+          </div>
+        </div>
+
+        <p class="text-xl text-wood/80 max-w-3xl mx-auto leading-relaxed mb-4 font-medium">
+          Trong mỗi chuyến phiêu lưu, định mệnh luôn dẫn lối. Hãy để la bàn thiêng liêng của Đại Ngàn chỉ ra con đường đến những trải nghiệm kỳ diệu...
+        </p>
+
+        <div class="flex items-center justify-center gap-2 text-wood/60">
+          <span class="w-8 h-px bg-wood/30"></span>
+          <span class="text-sm font-medium tracking-widest uppercase">Gia Lai Heritage</span>
+          <span class="w-8 h-px bg-wood/30"></span>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="w-full flex justify-center">
+        <div class="max-w-4xl w-full">
+          <!-- React Island for Spin Wheel -->
+          <ExploreApp locations={allLocations} client:load />
+        </div>
+      </div>
+
+      <!-- Highland Wisdom Section -->
+      <div class="mt-20 text-center">
+        <div class="relative max-w-4xl mx-auto">
+          <!-- Mystical Card Background -->
+          <div class="relative overflow-hidden rounded-3xl p-12" style="background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(74, 55, 40, 0.15) 50%, rgba(139, 69, 19, 0.1) 100%);">
+            <!-- Decorative border pattern -->
+            <div class="absolute inset-4 border border-wood/20 rounded-2xl"></div>
+            <div class="absolute top-8 left-8 w-6 h-6 border-l-2 border-t-2 border-wood/30"></div>
+            <div class="absolute top-8 right-8 w-6 h-6 border-r-2 border-t-2 border-wood/30"></div>
+            <div class="absolute bottom-8 left-8 w-6 h-6 border-l-2 border-b-2 border-wood/30"></div>
+            <div class="absolute bottom-8 right-8 w-6 h-6 border-r-2 border-b-2 border-wood/30"></div>
+
+            <div class="relative z-10">
+              <div class="text-wood/60 mb-4">
+                <svg width="40" height="40" viewBox="0 0 40 40" class="mx-auto opacity-50">
+                  <path d="M20 5 L25 15 L35 15 L27 23 L30 33 L20 28 L10 33 L13 23 L5 15 L15 15 Z" fill="currentColor"/>
+                </svg>
+              </div>
+
+              <h2 class="text-3xl font-bold text-wood mb-8 font-playfair">Huyền Thoại La Bàn</h2>
+
+              <div class="grid md:grid-cols-3 gap-8 text-wood/80">
+                <div class="text-center">
+                  <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-wood/10 flex items-center justify-center">
+                    <span class="text-2xl">🌟</span>
+                  </div>
+                  <h3 class="font-bold mb-3 text-wood font-playfair">Khởi tâm</h3>
+                  <p class="text-sm leading-relaxed">Hãy thành tâm với ước nguyện, để la bàn cảm nhận được tâm hồn của bạn</p>
+                </div>
+
+                <div class="text-center">
+                  <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-wood/10 flex items-center justify-center">
+                    <span class="text-2xl">⚡</span>
+                  </div>
+                  <h3 class="font-bold mb-3 text-wood font-playfair">Thiêng liêng</h3>
+                  <p class="text-sm leading-relaxed">La bàn sẽ quay trong 4 giây, mang theo năng lượng của đất trời Gia Lai</p>
+                </div>
+
+                <div class="text-center">
+                  <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-wood/10 flex items-center justify-center">
+                    <span class="text-2xl">🏔️</span>
+                  </div>
+                  <h3 class="font-bold mb-3 text-wood font-playfair">Khám phá</h3>
+                  <p class="text-sm leading-relaxed">Phiếu nhiệm vụ sẽ xuất hiện, dẫn lối bạn đến điểm đến được định mệnh</p>
+                </div>
+              </div>
+
+              <!-- Highland Quote -->
+              <div class="mt-12 pt-8 border-t border-wood/20">
+                <p class="italic text-wood/70 text-lg font-playfair leading-relaxed">
+                  "Trong từng nhịp đập của trái tim Đại Ngàn, <br/>
+                  có một câu chuyện đang chờ được kể..."
+                </p>
+                <p class="text-wood/50 text-sm mt-3 tracking-widest">— Truyền thuyết cổ Gia Lai —</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</LandingLayout>
+
+
+<style>
+  /* Custom animations for better UX */
+  @keyframes slide-in-from-bottom {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-in {
+    animation: slide-in-from-bottom 0.5s ease-out forwards;
+  }
+
+  .slide-in-from-bottom-4 {
+    transform: translateY(16px);
+  }
+
+  /* Ensure smooth transitions */
+  .transition-transform {
+    transition-property: transform;
+  }
+
+  .duration-4000 {
+    transition-duration: 4000ms;
+  }
+
+  .ease-out {
+    transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+</style>
+</LandingLayout>
