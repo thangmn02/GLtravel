@@ -1,32 +1,150 @@
 ---
-import ContentLayout from '../layouts/ContentLayout.astro';
-import site from '../data/site';
+import Layout from '../layouts/FullScreenLayout.astro';
+import SpinWheel from '../components/SpinWheel';
+import FoodModalContainer from '../components/FoodModalContainer';
+import { dishes } from '../data/dishes';
 ---
-<ContentLayout title={`Food — ${site.titleEn}`}>
-  <h1>
-    <span data-lang="en">Food</span>
-    <span data-lang="vi">Ẩm thực</span>
-  </h1>
-  <p>
-    <span data-lang="en">Add signature dishes, regional specialties, and where to try them.</span>
-    <span data-lang="vi">Thêm các món đặc trưng, đặc sản vùng miền và địa điểm thưởng thức.</span>
-  </p>
-  <h2>
-    <span data-lang="en">Must-Try Dishes</span>
-    <span data-lang="vi">Món nên thử</span>
-  </h2>
-  <ul>
-    <li>
-      <span data-lang="en">Gia Lai dry noodle (Pho Kho) — unique two-bowl style</span>
-      <span data-lang="vi">Phở khô Gia Lai — phong cách hai tô độc đáo</span>
-    </li>
-    <li>
-      <span data-lang="en">Grilled chicken with bamboo-tube rice</span>
-      <span data-lang="vi">Gà nướng cơm lam</span>
-    </li>
-    <li>
-      <span data-lang="en">Coffee — robust Central Highlands flavor</span>
-      <span data-lang="vi">Cà phê — đậm đà hương vị Tây Nguyên</span>
-    </li>
-  </ul>
-</ContentLayout>
+
+<Layout title="Gia Lai Food Tour">
+  <main class="min-h-screen bg-orange-50 text-amber-950 font-sans selection:bg-orange-200">
+    
+    {/* SECTION 1: HERO & SPIN WHEEL */}
+    <section class="relative min-h-screen flex flex-col items-center justify-center text-center overflow-hidden py-16">
+      <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/food.png')] opacity-5 pointer-events-none"></div>
+      
+      <div class="container mx-auto px-4 relative z-10 flex flex-col items-center">
+        <span class="inline-block py-1 px-3 rounded-full bg-orange-100 text-orange-600 text-xs font-bold uppercase tracking-widest mb-4 border border-orange-200">
+          Gia Lai Cuisine
+        </span>
+        <h1 class="text-4xl md:text-6xl font-black mb-6 text-amber-900 tracking-tight">
+          Vòng Xoay <span class="text-orange-600">Thực Thần</span>
+        </h1>
+        <p class="text-lg text-amber-800/70 max-w-xl mx-auto mb-12 font-medium">
+          Don't know what to eat today? Let the spirits of the mountain decide for you.
+        </p>
+
+        <div class="mb-8">
+          <SpinWheel client:visible items={dishes} />
+        </div>
+      </div>
+    </section>
+
+    {/* SECTION 2: BENTO GRID SHOWCASE */}
+    <section class="py-16 bg-white rounded-t-[40px] shadow-[0_-20px_40px_rgba(0,0,0,0.05)] min-h-screen">
+      <div class="container mx-auto px-4">
+        <div class="flex items-end justify-between mb-12">
+          <div>
+            <h2 class="text-3xl font-bold text-amber-900 mb-2">Iconic Dishes</h2>
+            <p class="text-amber-700/60">Must-try flavors of the highlands</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[300px]">
+          
+          {dishes.map((dish) => (
+            <div 
+              id={`dish-${dish.id}`}
+              class={`group relative rounded-3xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 ${dish.id === '1' ? 'md:col-span-2' : ''} dish-card`}
+            >
+              {/* Background Image */}
+              <div class="absolute inset-0 bg-gray-200">
+                <img 
+                  src={dish.image} 
+                  alt={dish.name}
+                  class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+              </div>
+
+              {/* Overlay */}
+              <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+
+              {/* Content */}
+              <div class="absolute bottom-0 left-0 right-0 p-6 md:p-8 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                <div class="flex justify-between items-end mb-2">
+                  <h3 class="text-2xl md:text-3xl font-bold text-white font-serif leading-none">
+                    {dish.name}
+                  </h3>
+                  <span class="bg-white/20 backdrop-blur-md border border-white/10 text-white px-3 py-1 rounded-full text-sm font-medium">
+                    {dish.priceRange}
+                  </span>
+                </div>
+                
+                <p class="text-white/80 line-clamp-2 mb-4 text-sm md:text-base font-light">
+                  {dish.description}
+                </p>
+
+                {/* Hidden Details (Reveal on Hover) */}
+                <div class="h-0 group-hover:h-auto overflow-hidden transition-all duration-300 opacity-0 group-hover:opacity-100">
+                  <div class="pt-4 border-t border-white/20">
+                    <span class="text-orange-300 text-xs font-bold uppercase tracking-wider block mb-2">Best Places</span>
+                    <div class="flex flex-wrap gap-2">
+                      {dish.suggestedPlaces.map(place => (
+                        <span class="text-xs text-white bg-black/40 px-2 py-1 rounded-md border border-white/10">
+                          {place}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+        </div>
+      </div>
+    </section>
+
+    {/* Modal Container to handle interaction */}
+    <FoodModalContainer client:load />
+
+  </main>
+</Layout>
+
+<script>
+  import confetti from 'canvas-confetti';
+
+  // Listen for the custom event from SpinWheel
+  window.addEventListener('spin-complete', (event: any) => {
+    const result = event.detail;
+    if (!result || !result.id) return;
+
+    // 1. Trigger Confetti
+    const duration = 3000;
+    const end = Date.now() + duration;
+
+    (function frame() {
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ['#f97316', '#fbbf24', '#ef4444'] // Orange/Yellow/Red theme
+      });
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ['#f97316', '#fbbf24', '#ef4444']
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    }());
+
+    // 2. Scroll to the dish card
+    setTimeout(() => {
+      const element = document.getElementById(`dish-${result.id}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // 3. Highlight Effect
+        element.classList.add('ring-4', 'ring-orange-500', 'scale-[1.02]', 'z-10');
+        setTimeout(() => {
+          element.classList.remove('ring-4', 'ring-orange-500', 'scale-[1.02]', 'z-10');
+        }, 2000);
+      }
+    }, 500); // Small delay to let user see the result modal first
+  });
+</script>

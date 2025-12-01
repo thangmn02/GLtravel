@@ -11,9 +11,20 @@
   },
   "dependencies": {
     "@astrojs/netlify": "latest",
+    "@astrojs/react": "^4.4.2",
+    "@astrojs/tailwind": "^6.0.2",
+    "@tailwindcss/postcss": "^4.1.17",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "astro": "latest",
+    "canvas-confetti": "^1.9.4",
+    "framer-motion": "^12.23.24",
     "gsap": "^3.12.5",
-    "mapbox-gl": "^3.14.0"
+    "lucide-react": "^0.555.0",
+    "mapbox-gl": "^3.14.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "prettier": "^3.3.3",

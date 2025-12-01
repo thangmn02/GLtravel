@@ -557,6 +557,11 @@ const hotelsData = hotelsArray.map((h) => {
         if (group === 'landmark' && item.featured) {
           html += '<span class="custom-infowindow-category custom-infowindow-featured">⭐ Nổi bật</span>';
         }
+        
+        // Add "Get Directions" link
+        var query = encodeURIComponent((title || '') + ' ' + (item.address || 'Gia Lai'));
+        html += '<a href="https://www.google.com/maps/search/?api=1&query=' + query + '" target="_blank" style="display:block; margin-top:12px; color:#4285F4; font-weight:bold; text-decoration:none; font-size:14px;">📍 Chỉ đường trên Google Maps</a>';
+        
         html += '</div></div>';
         return html;
       }
@@ -903,6 +908,68 @@ const hotelsData = hotelsArray.map((h) => {
             document.getElementById('route-info-overlay').remove();
           }
         }, 10000);
+      }
+      // Check for deep link query param
+      handleDeepLink();
+
+      function handleDeepLink() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const query = urlParams.get('q');
+        if (!query) return;
+        
+        console.log('🔗 Deep linking to:', query);
+        
+        // Normalize query
+        const normalizedQuery = query.toLowerCase().trim();
+        
+        // Helper to search in array
+        const searchIn = (arr, group) => {
+            if (!Array.isArray(arr)) return null;
+            return arr.find(item => {
+                const name = item.name || item.title || '';
+                return name.toLowerCase().includes(normalizedQuery);
+            });
+        };
+        
+        let foundId = null;
+        let foundGroup = null;
+        
+        // Search order: Landmarks -> Eateries -> Hotels
+        let match = searchIn(landmarksData, 'landmark');
+        if (match) { foundId = match.id; foundGroup = 'landmark'; }
+        else {
+            match = searchIn(eateriesData, 'eatery');
+            if (match) { foundId = match.id; foundGroup = 'eatery'; }
+            else {
+                match = searchIn(hotelsData, 'hotel');
+                if (match) { foundId = match.id; foundGroup = 'hotel'; }
+            }
+        }
+        
+        if (foundId && foundGroup) {
+            console.log('✅ Found deep link target:', foundId);
+            
+            // Switch tab
+            var tabId = foundGroup === 'landmark' ? 'tab-landmarks' : (foundGroup === 'eatery' ? 'tab-eateries' : 'tab-hotels');
+            var tabEl = document.getElementById(tabId);
+            if (tabEl) tabEl.click();
+            
+            // Wait a bit for markers to be set visible
+            setTimeout(() => {
+                highlightListItemById(foundId);
+                var ref = markerById.get(foundId);
+                if (ref && ref.marker) {
+                    google.maps.event.trigger(ref.marker, 'click');
+                }
+            }, 500);
+        } else {
+            console.warn('⚠️ Deep link target not found:', query);
+            var searchInput = document.getElementById('pac-input');
+            if (searchInput) {
+                searchInput.value = query;
+                searchInput.focus();
+            }
+        }
       }
     };
     
